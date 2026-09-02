@@ -17,13 +17,13 @@ def invoke(args: list[str], *, stdin_text: str = "") -> tuple[int, str, str]:
 def test_no_arguments_shows_help() -> None:
     code, stdout, stderr = invoke([])
     assert code == 0
-    assert "markdown-docx 1.0.0" in stdout
+    assert "markdown-docx 0.1.0" in stdout
     assert "Agent skill:" in stdout
     assert stderr == ""
 
 
 def test_version_and_about() -> None:
-    assert invoke(["--version"]) == (0, "markdown-docx 1.0.0\n", "")
+    assert invoke(["--version"]) == (0, "markdown-docx 0.1.0\n", "")
     code, stdout, stderr = invoke(["--about"])
     assert code == 0
     assert "pseudosavant/markdown-docx" in stdout

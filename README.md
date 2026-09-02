@@ -43,7 +43,7 @@ uvx markdown-docx --syntax --json
 
 ## Supported Markdown
 
-Version 1.0.0 supports:
+Version 0.1.0 supports:
 
 - ATX headings from `#` through `######`
 - Paragraphs and standard soft or hard line breaks
@@ -55,7 +55,7 @@ Version 1.0.0 supports:
 - Local and remote inline images
 - Standalone images with width and alignment metadata
 
-Links are rejected in 1.0.0. `python-docx` 1.2.0 can read hyperlinks but has no supported public API for creating them. The source alt text for images remains meaningful Markdown content, but the same library release has no public API for embedding it in a Word drawing. A rendered document containing images reports `image_alt_text_not_embedded` in its warning list.
+Links are rejected in 0.1.0. `python-docx` 1.2.0 can read hyperlinks but has no supported public API for creating them. The source alt text for images remains meaningful Markdown content, but the same library release has no public API for embedding it in a Word drawing. A rendered document containing images reports `image_alt_text_not_embedded` in its warning list.
 
 The following syntax is intentionally unsupported:
 
@@ -310,7 +310,7 @@ Exit codes:
 
 ## Complete example
 
-See [the showcase Markdown](sample/showcase.md). It covers supported text, list, table, image, page-break, and section behavior. Regenerate it from a repository checkout:
+See [the showcase Markdown](sample/showcase.md). It opens with an illustrated three-dog story, then exercises supported text, list, table, image, page-break, and section behavior in a dedicated capability lab. Regenerate it from a repository checkout:
 
 ```powershell
 uvx --refresh --from . markdown-docx sample\showcase.md sample\showcase.docx --force

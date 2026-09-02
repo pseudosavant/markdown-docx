@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0
+## 0.1.0
 
 - Add strict Markdown parsing with invisible YAML directives and line-aware diagnostics.
 - Add editable Word rendering for text, headings, blockquotes, code, mixed nested lists, tables, images, page breaks, and sections.

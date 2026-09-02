@@ -66,7 +66,7 @@ Run `uvx markdown-docx --syntax` for every accepted key and value.
 
 ## Supported Markdown
 
-Use ATX headings, paragraphs, emphasis, strong text, inline code, hard line breaks, fenced code blocks, blockquotes, lists, pipe tables, and local or remote images. Links are rejected in 1.0.0 because `python-docx` 1.2.0 does not provide public hyperlink creation. Raw HTML, task lists, footnotes, horizontal rules, indented code, multi-paragraph list items, and unsupported nested block content are rejected.
+Use ATX headings, paragraphs, emphasis, strong text, inline code, hard line breaks, fenced code blocks, blockquotes, lists, pipe tables, and local or remote images. Links are rejected in 0.1.0 because `python-docx` 1.2.0 does not provide public hyperlink creation. Raw HTML, task lists, footnotes, horizontal rules, indented code, multi-paragraph list items, and unsupported nested block content are rejected.
 
 Relative image paths resolve from the Markdown file. When reading stdin, provide an output and `--base-dir`. Use `--no-remote-images` for offline or untrusted input.
 

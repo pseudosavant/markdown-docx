@@ -1,4 +1,4 @@
-# markdown-docx 1.0.0 Plan
+# markdown-docx 0.1.0 Plan
 
 ## Purpose
 
@@ -6,7 +6,7 @@
 
 The Markdown must remain readable and render normally in standard Markdown renderers. Word-specific instructions will live in reserved HTML comments, which normal renderers do not display.
 
-Version 1.0.0 will use only supported public `python-docx` APIs when creating or modifying documents. It will not edit OOXML parts directly. If a feature needs private APIs or direct XML manipulation, it belongs in a later release after the needed capability is added upstream to `python-docx`.
+Version 0.1.0 will use only supported public `python-docx` APIs when creating or modifying documents. It will not edit OOXML parts directly. If a feature needs private APIs or direct XML manipulation, it belongs in a later release after the needed capability is added upstream to `python-docx`.
 
 ## Product principles
 
@@ -30,7 +30,7 @@ Recommended initial identity:
 - Python import package: `markdown_docx`
 - Source layout: `src/markdown_docx`
 
-## Version 1.0.0 scope
+## Version 0.1.0 scope
 
 ### Included
 
@@ -91,7 +91,7 @@ Unsupported Markdown extensions must produce a clear diagnostic. They must not b
 
 ### Invisible metadata
 
-Reserve HTML comments beginning with `markdown-docx`. All other HTML is unsupported in 1.0.0.
+Reserve HTML comments beginning with `markdown-docx`. All other HTML is unsupported in 0.1.0.
 
 Document metadata appears once, before the first visible block:
 
@@ -152,7 +152,7 @@ Metadata comments are invisible in normal HTML rendering. The raw Markdown file 
 
 ### Page sizes
 
-Version 1.0.0 supports these named sizes:
+Version 0.1.0 supports these named sizes:
 
 | Name | Portrait width | Portrait height |
 | --- | ---: | ---: |
@@ -225,7 +225,7 @@ section: default
 -->
 ```
 
-Continuous, odd-page, and even-page section breaks are outside the 1.0.0 scope.
+Continuous, odd-page, and even-page section breaks are outside the 0.1.0 scope.
 
 ### Page breaks
 
@@ -239,15 +239,15 @@ The directive creates an explicit page break before the next content block. It d
 
 ### Pagination controls
 
-The author-facing pagination surface in 1.0.0 consists only of page breaks and section breaks. Template paragraph styles may contain Word pagination behavior such as keep-with-next and widow control. The Markdown format will not expose those settings individually.
+The author-facing pagination surface in 0.1.0 consists only of page breaks and section breaks. Template paragraph styles may contain Word pagination behavior such as keep-with-next and widow control. The Markdown format will not expose those settings individually.
 
-Page numbers are not part of the 1.0.0 schema. They should be added only after `python-docx` has a supported public field API that can create `PAGE` and `NUMPAGES` fields.
+Page numbers are not part of the 0.1.0 schema. They should be added only after `python-docx` has a supported public field API that can create `PAGE` and `NUMPAGES` fields.
 
 ## Templates and styles
 
 ### Template contract
 
-Version 1.0.0 accepts a `.docx` formatting template. It does not accept `.dotx`.
+Version 0.1.0 accepts a `.docx` formatting template. It does not accept `.dotx`.
 
 The renderer opens the template directly with `python-docx` and adds generated content to it. This preserves the package parts that Word and `python-docx` already retain, including styles, theme data, fonts, numbering definitions, and document defaults.
 
@@ -260,7 +260,7 @@ The template must be blank and formatting-only. Validate it before rendering. Re
 
 The expected empty initial body paragraph is allowed and may be reused for the first generated block when practical.
 
-Strict rejection is the 1.0.0 answer to the earlier goal of ignoring template content. Public `python-docx` APIs do not provide a general document-body clearing operation. Silently leaving content in place would produce the wrong document. Arbitrary content removal can be reconsidered after upstream support exists.
+Strict rejection is the 0.1.0 answer to the earlier goal of ignoring template content. Public `python-docx` APIs do not provide a general document-body clearing operation. Silently leaving content in place would produce the wrong document. Arbitrary content removal can be reconsidered after upstream support exists.
 
 When no template is supplied, use a packaged blank `.docx` template with all styles required by the default mappings.
 
@@ -290,7 +290,7 @@ Document-level mappings:
 - Unordered list style by nesting depth
 - Table style
 
-There is no Markdown metadata for selecting arbitrary character styles in 1.0.0.
+There is no Markdown metadata for selecting arbitrary character styles in 0.1.0.
 
 ### Font behavior
 
@@ -304,7 +304,7 @@ Optional document font overrides may set concrete typefaces for:
 
 Body and heading overrides update the mapped paragraph styles through public `python-docx` APIs. They do not introduce character styles. Inline backtick code receives a direct monospace run font override while inheriting surrounding size, color, emphasis, and paragraph formatting.
 
-Do not expose document-wide font size or font color overrides in 1.0.0. Those values should come from the mapped template styles. Theme colors and theme font declarations are preserved from the template but cannot be edited through the Markdown schema in 1.0.0.
+Do not expose document-wide font size or font color overrides in 0.1.0. Those values should come from the mapped template styles. Theme colors and theme font declarations are preserved from the template but cannot be edited through the Markdown schema in 0.1.0.
 
 ## Content mapping
 
@@ -328,11 +328,11 @@ Do not expose document-wide font size or font color overrides in 1.0.0. Those va
 - Links become native Word hyperlinks only if the pinned `python-docx` version has a supported public creation API. Otherwise Phase 0 must define a strict temporary behavior before implementation proceeds.
 - Raw inline HTML is unsupported.
 
-Do not add metadata for underline, highlight, arbitrary font size, arbitrary inline color, superscript, or subscript in 1.0.0.
+Do not add metadata for underline, highlight, arbitrary font size, arbitrary inline color, superscript, or subscript in 0.1.0.
 
 ## Lists
 
-Ordered and unordered lists are required for 1.0.0.
+Ordered and unordered lists are required for 0.1.0.
 
 Use template-provided paragraph styles for each list type and nesting depth. A mixed nested list chooses the appropriate ordered or unordered style independently at every depth.
 
@@ -354,7 +354,7 @@ Rules:
 
 - The configured style arrays define the supported maximum depth.
 - A list nested deeper than its configured style array is an error.
-- Ordered lists must begin with `1` in 1.0.0.
+- Ordered lists must begin with `1` in 0.1.0.
 - Source marker numbers after the first item are ignored according to normal Markdown parsing.
 - There is no restart, continue-numbering, or arbitrary-start metadata.
 - Word and the template own marker glyphs, numbering formats, indentation, and continuation behavior.
@@ -408,7 +408,7 @@ Validation:
 - All width ratios must be positive.
 - If a table cannot fit the usable width, report a clear error or warning with a suggestion to use a landscape section.
 
-Not supported in 1.0.0:
+Not supported in 0.1.0:
 
 - Merged cells
 - Nested tables
@@ -423,7 +423,7 @@ The first Markdown row is a semantic header row. Word may repeat it only if the 
 
 ## Images
 
-Images are inline in 1.0.0. Text wrapping around images requires a floating drawing anchor and is deferred until it is supported by a public `python-docx` API.
+Images are inline in 0.1.0. Text wrapping around images requires a floating drawing anchor and is deferred until it is supported by a public `python-docx` API.
 
 An ordinary Markdown image is inserted inline at its source location:
 
@@ -596,7 +596,7 @@ Pin a candidate `python-docx` version and prove each required behavior in small 
 - Determine whether image alt text can be set through a public API.
 - Record every supported and unsupported operation in a capability matrix under `docs/` or in the README.
 
-Exit criterion: every 1.0.0 rendering feature has a proven public API path. Any failed item must be narrowed, deferred, or proposed upstream before full implementation begins.
+Exit criterion: every 0.1.0 rendering feature has a proven public API path. Any failed item must be narrowed, deferred, or proposed upstream before full implementation begins.
 
 ### Phase 1: Project foundation
 
@@ -686,7 +686,7 @@ Exit criterion: every 1.0.0 rendering feature has a proven public API path. Any 
 - Confirm round-trip editability.
 - Confirm that templates remain unchanged on disk.
 - Confirm that no implementation code writes private OOXML or calls private `python-docx` members.
-- Tag 1.0.0 only after every acceptance criterion below passes.
+- Tag 0.1.0 only after every acceptance criterion below passes.
 
 ## Testing strategy
 
@@ -724,7 +724,7 @@ Semantic and XML tests do not prove layout quality. Maintain a small visual smok
 - Check page transitions, list indentation, table width, image sizing, and style fidelity.
 - Treat Word as the primary compatibility target. Treat LibreOffice differences as documented compatibility findings rather than automatic Word regressions.
 
-## 1.0.0 acceptance criteria
+## 0.1.0 acceptance criteria
 
 - A normal Markdown renderer displays the authored content without visible Word metadata.
 - The packaged default template can render every supported construct.
@@ -741,9 +741,9 @@ Semantic and XML tests do not prove layout quality. Maintain a small visual smok
 - No production path uses private `python-docx` members or direct OOXML edits.
 - README, `--help`, `--syntax`, tests, and showcase examples agree on the format contract.
 
-## Post-1.0.0 roadmap
+## Post-0.1.0 roadmap
 
-Post-1.0.0 features should follow upstream `python-docx` support. Prefer contributing a general public API upstream, waiting for a released version, then consuming that API here.
+Post-0.1.0 features should follow upstream `python-docx` support. Prefer contributing a general public API upstream, waiting for a released version, then consuming that API here.
 
 ### DOTX templates
 
@@ -837,4 +837,4 @@ The following do not become automatic roadmap items merely because an API become
 
 ## First implementation task
 
-Begin with Phase 0. Create executable capability tests against the latest stable `python-docx`, record the exact version, and resolve the hyperlink and image-alt-text questions. Do not scaffold the full renderer until the required public API paths are proven. That short investigation protects the 1.0.0 contract from accidental private XML dependencies.
+Begin with Phase 0. Create executable capability tests against the latest stable `python-docx`, record the exact version, and resolve the hyperlink and image-alt-text questions. Do not scaffold the full renderer until the required public API paths are proven. That short investigation protects the 0.1.0 contract from accidental private XML dependencies.
