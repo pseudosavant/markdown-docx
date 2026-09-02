@@ -1,0 +1,47 @@
+{
+  "format": "markdown-docx",
+  "version": "1.0.0",
+  "text": "markdown-docx 1.0.0 syntax\n\nSupported Markdown:\n  ATX headings, paragraphs, emphasis, strong text, inline code, hard line breaks, fenced code blocks, blockquotes, ordered and unordered lists, pipe tables, and images.\n\nMetadata comments:\n  document metadata must be first\n  section metadata starts a next-page section\n  <!-- markdown-docx: page-break --> inserts a page break\n  table metadata must immediately precede a pipe table\n  image metadata must immediately precede a standalone image\n\nLengths use in, cm, mm, or pt. Image widths may also use percentages.\n\nUnsupported in 1.0.0:\n  links, raw HTML, task lists, footnotes, horizontal rules, indented code blocks, multi-paragraph list items, DOTX, floating images, headers and footers from Markdown, page-number fields, and direct OOXML features.",
+  "page_sizes": ["letter", "legal", "a4", "custom"],
+  "orientations": ["portrait", "landscape"],
+  "length_units": ["in", "cm", "mm", "pt"],
+  "directives": {
+    "document": {
+      "keys": ["page_size", "orientation", "margins", "styles", "fonts"],
+      "placement": "first non-whitespace content"
+    },
+    "section": {
+      "keys": ["page_size", "orientation", "margins"],
+      "shorthand": "default",
+      "break": "next-page"
+    },
+    "page_break": {
+      "syntax": "<!-- markdown-docx: page-break -->"
+    },
+    "table": {
+      "keys": ["style", "alignment", "width", "column_widths"],
+      "alignment": ["left", "center", "right"],
+      "width": ["auto", "page"]
+    },
+    "image": {
+      "keys": ["width", "alignment"],
+      "alignment": ["left", "center", "right"]
+    }
+  },
+  "default_styles": {
+    "paragraph": "Normal",
+    "headings": {
+      "1": "Heading 1",
+      "2": "Heading 2",
+      "3": "Heading 3",
+      "4": "Heading 4",
+      "5": "Heading 5",
+      "6": "Heading 6"
+    },
+    "blockquote": "Quote",
+    "code_block": "Code Block",
+    "ordered_list": ["List Number", "List Number 2", "List Number 3"],
+    "unordered_list": ["List Bullet", "List Bullet 2", "List Bullet 3"],
+    "table": "Table Grid"
+  }
+}

@@ -1,0 +1,12 @@
+/.mypy_cache/
+/.qa/
+/.pytest_cache/
+/.pytest-tmp/
+/.ruff_cache/
+/.venv/
+/.wheel-smoke/
+/build/
+/dist/
+/**/__pycache__/
+*.egg-info/
+*.py[cod]

@@ -1,0 +1,72 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "markdown-docx"
+version = "1.0.0"
+description = "Convert constrained Markdown documents into editable Word files."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "John Paul Ellis" }]
+keywords = ["markdown", "word", "docx", "document", "cli"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Office/Business :: Office Suites",
+  "Topic :: Software Development :: Documentation",
+  "Topic :: Text Processing :: Markup",
+]
+dependencies = [
+  "httpx>=0.27,<1",
+  "markdown-it-py>=3.0,<5",
+  "Pillow>=10.0,<13",
+  "PyYAML>=6.0,<7",
+  "python-docx==1.2.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/pseudosavant/markdown-docx"
+Repository = "https://github.com/pseudosavant/markdown-docx"
+Issues = "https://github.com/pseudosavant/markdown-docx/issues"
+Releases = "https://github.com/pseudosavant/markdown-docx/releases"
+
+[project.scripts]
+markdown-docx = "markdown_docx.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/markdown_docx"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--basetemp=.pytest-tmp"
+
+[dependency-groups]
+dev = [
+  "mypy>=1.15",
+  "pytest>=8.0",
+  "ruff==0.16.1",
+  "twine>=6.1",
+  "types-PyYAML>=6.0",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "UP", "B", "RUF"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["src/markdown_docx"]
+strict = true
+warn_unused_ignores = true
