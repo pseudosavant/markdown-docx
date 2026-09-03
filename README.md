@@ -22,6 +22,39 @@ Then ask an agent to create both the Markdown source and the editable Word outpu
 
 The skill teaches the agent how to inspect the format, inspect blank Word templates, render safely, and handle structured results.
 
+## Manage the agent skill
+
+The standard location is `~/.agents/skills/markdown-docx/SKILL.md`. Normally installed CLI builds automatically synchronize an already-installed managed skill during ordinary commands, including help and version output. The running CLI version is the authority. A pristine older skill is replaced with the bundled skill. Equal and newer versions are left alone. Missing and unmanaged skills are never installed or overwritten automatically.
+
+Synchronization is local. It does not query a package index, refresh uv's cache, or update the CLI. The skill continues to instruct agents to use `uvx markdown-docx`. Updates affect future skill loading. Instructions already loaded by a running agent may stay unchanged until the agent reloads them.
+
+Inspect the skill without changing it:
+
+```powershell
+uvx markdown-docx skill status
+uvx markdown-docx skill status --json
+```
+
+Status reports the selected path, ownership, CLI and skill versions, version ordering, integrity, and automatic synchronization eligibility. Modified or unverifiable skills with valid version metadata are preserved. To replace a managed skill intentionally:
+
+```powershell
+uvx markdown-docx skill install --force
+```
+
+Install `--force` still refuses unmanaged content and never downgrades a newer skill. A normal install creates a missing skill, updates a pristine older skill, or leaves a current skill alone. Legacy managed skills and managed skills with missing or invalid version metadata receive a fresh replacement. This recovery does not require a valid hash.
+
+Custom directories require explicit updates. Automatic synchronization only checks the standard directory. Local source and editable development builds skip automatic synchronization, but explicit installation still works:
+
+```powershell
+uvx markdown-docx skill install --skills-dir PATH
+uvx markdown-docx skill status --skills-dir PATH
+uvx --from . markdown-docx skill install
+```
+
+Remove the skill with `uvx markdown-docx skill remove`. Removal refuses unmanaged content and extra files unless `--force` is supplied. All skill commands accept `--skills-dir` and `--json`. Skill commands never trigger automatic synchronization. Maintenance notices go to stderr and leave JSON stdout intact.
+
+See [skill lifecycle metadata and decisions](docs/skill-management.md) for the hash format and recovery rules.
+
 ## Use the CLI directly
 
 ```powershell
@@ -43,7 +76,7 @@ uvx markdown-docx --syntax --json
 
 ## Supported Markdown
 
-Version 0.1.0 supports:
+Version 0.2.0 supports:
 
 - ATX headings from `#` through `######`
 - Paragraphs and standard soft or hard line breaks
@@ -55,7 +88,7 @@ Version 0.1.0 supports:
 - Local and remote inline images
 - Standalone images with width and alignment metadata
 
-Links are rejected in 0.1.0. `python-docx` 1.2.0 can read hyperlinks but has no supported public API for creating them. The source alt text for images remains meaningful Markdown content, but the same library release has no public API for embedding it in a Word drawing. A rendered document containing images reports `image_alt_text_not_embedded` in its warning list.
+Links are rejected in 0.2.0. `python-docx` 1.2.0 can read hyperlinks but has no supported public API for creating them. The source alt text for images remains meaningful Markdown content, but the same library release has no public API for embedding it in a Word drawing. A rendered document containing images reports `image_alt_text_not_embedded` in its warning list.
 
 The following syntax is intentionally unsupported:
 

@@ -4,6 +4,10 @@ import io
 import json
 from pathlib import Path
 
+import pytest
+
+from markdown_docx import __version__, skill
+from markdown_docx import cli as cli_module
 from markdown_docx.cli import main
 
 
@@ -17,13 +21,13 @@ def invoke(args: list[str], *, stdin_text: str = "") -> tuple[int, str, str]:
 def test_no_arguments_shows_help() -> None:
     code, stdout, stderr = invoke([])
     assert code == 0
-    assert "markdown-docx 0.1.0" in stdout
+    assert f"markdown-docx {__version__}" in stdout
     assert "Agent skill:" in stdout
     assert stderr == ""
 
 
 def test_version_and_about() -> None:
-    assert invoke(["--version"]) == (0, "markdown-docx 0.1.0\n", "")
+    assert invoke(["--version"]) == (0, f"markdown-docx {__version__}\n", "")
     code, stdout, stderr = invoke(["--about"])
     assert code == 0
     assert "pseudosavant/markdown-docx" in stdout
@@ -161,3 +165,134 @@ def test_conflicting_and_invalid_arguments_fail_cleanly(tmp_path: Path) -> None:
     code, _, stderr = invoke([str(source), str(tmp_path / "wrong.pdf")])
     assert code == 2
     assert ".docx extension" in stderr
+
+
+@pytest.mark.parametrize(
+    "args",
+    [
+        [],
+        ["--help"],
+        ["-h"],
+        ["--version"],
+        ["--about"],
+        ["--syntax"],
+        ["--inspect-template"],
+        ["--list-styles"],
+        ["--list-table-styles"],
+    ],
+)
+def test_normal_entry_points_synchronize(args: list[str], monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(skill, "runtime_source", lambda: "installed")
+    path = skill.skill_dir() / "SKILL.md"
+    path.parent.mkdir(parents=True)
+    path.write_bytes(skill.render_skill("0.0.1").encode("utf-8"))
+    code, stdout, stderr = invoke(args)
+    assert code == 0
+    assert stdout
+    assert "Updated managed skill" in stderr
+    assert path.read_bytes() == skill.render_skill().encode("utf-8")
+
+
+@pytest.mark.parametrize(
+    "action", [[], ["--help"], ["install"], ["install", "--help"], ["remove"], ["status"], ["unknown"]]
+)
+def test_skill_commands_never_synchronize(action: list[str], monkeypatch: pytest.MonkeyPatch) -> None:
+    def forbidden(**kwargs: object) -> None:
+        pytest.fail("Skill management must not invoke automatic synchronization")
+
+    monkeypatch.setattr(cli_module, "synchronize_skill", forbidden)
+    code, _, _ = invoke(["skill", *action])
+    assert code == (2 if action == ["unknown"] else 0)
+
+
+@pytest.mark.parametrize("failure", [False, True])
+def test_render_json_stdout_is_clean_during_maintenance(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failure: bool
+) -> None:
+    monkeypatch.setattr(skill, "runtime_source", lambda: "installed")
+    path = skill.skill_dir() / "SKILL.md"
+    path.parent.mkdir(parents=True)
+    path.write_bytes(skill.render_skill("0.0.1").encode("utf-8"))
+    if failure:
+
+        def fail(*args: object) -> None:
+            raise PermissionError("Simulated permission error")
+
+        monkeypatch.setattr(skill, "_atomic_replace", fail)
+    source = tmp_path / "source.md"
+    source.write_text("# Document\n", encoding="utf-8")
+    code, stdout, stderr = invoke([str(source), "--json"])
+    assert code == 0
+    payload = json.loads(stdout)
+    assert payload["ok"] and payload["mode"] == "render"
+    assert Path(payload["output"]).is_file()
+    assert ("Could not synchronize" if failure else "Updated managed skill") in stderr
+
+
+def test_sync_failure_does_not_mask_primary_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def failure() -> str:
+        raise OSError("Metadata unavailable")
+
+    monkeypatch.setattr(skill, "runtime_source", failure)
+    code, stdout, stderr = invoke([str(tmp_path / "missing.md"), "--json"])
+    assert code == 2
+    assert json.loads(stdout)["error"]["code"] == "input_not_found"
+    assert "Could not synchronize" in stderr
+
+
+def test_skill_status_and_force_cli_contract(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(skill, "runtime_source", lambda: "local")
+    root = tmp_path / "custom skills"
+    args = ["--skills-dir", str(root)]
+    code, stdout, stderr = invoke(["skill", "install", *args, "--json"])
+    result = json.loads(stdout)
+    assert code == 0 and stderr == "" and result["created"]
+    path = Path(result["path"])
+    path.write_bytes(path.read_bytes() + b"Edited instructions\n")
+    before = path.read_bytes(), path.stat().st_mtime_ns
+    code, stdout, stderr = invoke(["skill", "status", *args, "--json"])
+    result = json.loads(stdout)
+    assert code == 0 and stderr == ""
+    assert result["ok"] and result["mode"] == "skill_status"
+    assert result["path"] == str(path)
+    assert result["cli_version"] == __version__ == result["managed_version"]
+    assert result["integrity"] == "altered"
+    assert result["version_relation"] == "equal"
+    assert result["local_development"] and not result["automatic_sync_eligible"]
+    assert skill.FORCE_INSTALL_COMMAND in result["force_install_command"]
+    assert str(root) in result["force_install_command"]
+    assert (path.read_bytes(), path.stat().st_mtime_ns) == before
+    code, stdout, stderr = invoke(["skill", "status", *args])
+    assert code == 0 and stderr == ""
+    assert "Integrity: altered" in stdout
+    assert "Local development: true" in stdout
+    code, stdout, stderr = invoke(["skill", "install", *args, "--json"])
+    assert code == 2 and stderr == ""
+    assert skill.FORCE_INSTALL_COMMAND in json.loads(stdout)["error"]["message"]
+    code, stdout, stderr = invoke(["skill", "install", *args, "--force", "--json"])
+    assert code == 0 and stderr == "" and json.loads(stdout)["updated"]
+    code, stdout, stderr = invoke(["skill", "install", *args, "--json"])
+    assert code == 0 and stderr == "" and not json.loads(stdout)["updated"]
+    code, _, stderr = invoke(["skill", "status", "--force"])
+    assert code == 2 and "--force is valid only" in stderr
+
+
+def test_install_force_refuses_unmanaged_json_and_remove_force_still_works() -> None:
+    path = skill.skill_dir() / "SKILL.md"
+    path.parent.mkdir(parents=True)
+    path.write_text("Unmanaged", encoding="utf-8")
+    code, stdout, stderr = invoke(["skill", "install", "--force", "--json"])
+    assert code == 2 and stderr == ""
+    assert "unmanaged" in json.loads(stdout)["error"]["message"]
+    code, stdout, stderr = invoke(["skill", "remove", "--force", "--json"])
+    assert code == 0 and stderr == "" and json.loads(stdout)["removed"]
+    assert not path.parent.exists()
+
+
+def test_skill_help_documents_status_and_force() -> None:
+    for args in (["--help"], ["skill", "--help"]):
+        code, stdout, stderr = invoke(args)
+        assert code == 0 and stderr == ""
+        assert "skill status [--skills-dir DIR] [--json]" in stdout
+        assert "skill install [--skills-dir DIR] [--force] [--json]" in stdout
+    assert skill.FORCE_INSTALL_COMMAND in invoke(["skill", "--help"])[1]

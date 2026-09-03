@@ -8,9 +8,18 @@ import pytest
 from docx import Document
 from docx.enum.style import WD_STYLE_TYPE
 
+from markdown_docx import skill
+
 PNG_1X1 = base64.b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
 )
+
+
+@pytest.fixture(autouse=True)
+def isolated_skills_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    root = tmp_path / "home" / ".agents" / "skills"
+    monkeypatch.setattr(skill, "default_skills_dir", lambda: root)
+    return root
 
 
 @pytest.fixture

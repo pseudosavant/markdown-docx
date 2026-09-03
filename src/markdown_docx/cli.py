@@ -12,7 +12,7 @@ from markdown_docx.assets import load_syntax_payload
 from markdown_docx.errors import EXIT_INTERNAL, InputError, MarkdownDocxError, UsageError
 from markdown_docx.parser import parse_document
 from markdown_docx.renderer import render_docx
-from markdown_docx.skill import install_skill, remove_skill
+from markdown_docx.skill import install_skill, remove_skill, skill_status, synchronize_skill
 from markdown_docx.template import inspect_template
 
 PROGRAM_NAME = "markdown-docx"
@@ -77,8 +77,10 @@ Inspection:
   {PROGRAM_NAME} --list-table-styles [--template formatting.docx] [--json]
 
 Agent skill:
-  {PROGRAM_NAME} skill install [--skills-dir DIR] [--json]
+  {PROGRAM_NAME} skill install [--skills-dir DIR] [--force] [--json]
   {PROGRAM_NAME} skill remove [--skills-dir DIR] [--force] [--json]
+  {PROGRAM_NAME} skill status [--skills-dir DIR] [--json]
+  Installed managed skills sync locally during normal commands. See 'skill --help'.
 
 Common options:
   -h, --help              Show this quick reference.
@@ -113,11 +115,17 @@ def main(
     args_list = list(sys.argv[1:] if argv is None else argv)
     json_mode = "--json" in args_list
     try:
+        if args_list and args_list[0] == "skill":
+            if len(args_list) == 1 or "-h" in args_list or "--help" in args_list:
+                stdout.write(build_skill_help())
+                return 0
+            return _run_skill_command(args_list[1:], stdout=stdout)
+        synchronize_skill(stderr=stderr, version=__version__)
         if not args_list:
             stdout.write(build_root_help())
             return 0
         if "-h" in args_list or "--help" in args_list:
-            stdout.write(build_skill_help() if args_list[0] == "skill" else build_root_help())
+            stdout.write(build_root_help())
             return 0
         if "--version" in args_list:
             if args_list != ["--version"]:
@@ -131,8 +139,6 @@ def main(
                 f"{PROGRAM_NAME} {__version__}\n{PROJECT_SUMMARY}\nProject: {PROJECT_URL}\nLicense: {PROJECT_LICENSE}\n"
             )
             return 0
-        if args_list[0] == "skill":
-            return _run_skill_command(args_list[1:], stdout=stdout)
         args = build_parser().parse_args(args_list)
         return _run(args, stdin=stdin, stdout=stdout)
     except MarkdownDocxError as exc:
@@ -287,30 +293,56 @@ def _write_error(exc: MarkdownDocxError, *, json_mode: bool, stdout: TextIO, std
 
 def build_skill_help() -> str:
     return f"""Usage:
-  {PROGRAM_NAME} skill install [--skills-dir DIR] [--json]
+  {PROGRAM_NAME} skill install [--skills-dir DIR] [--force] [--json]
   {PROGRAM_NAME} skill remove [--skills-dir DIR] [--force] [--json]
+  {PROGRAM_NAME} skill status [--skills-dir DIR] [--json]
 
-Install or remove the managed `{PROGRAM_NAME}` agent skill. The default root is ~/.agents/skills.
-Removal refuses unmanaged content unless --force is supplied.
+Install, inspect, or remove the managed `{PROGRAM_NAME}` agent skill.
+The default root is ~/.agents/skills. Status is read-only.
+
+Normal commands synchronize an already-installed, pristine older managed skill
+to the running CLI version. They never install a missing skill or downgrade it.
+Modified or unverifiable skills are preserved. To replace managed edits, use:
+  uvx {PROGRAM_NAME} skill install --force
+Install --force still refuses unmanaged content. Removal --force may remove
+unmanaged content and extra files in the skill directory.
+
+Automatic synchronization uses only the standard directory. Custom directories
+require explicit installs. Local source and editable builds do not synchronize
+automatically. Skill commands never trigger automatic synchronization.
+This does not query a package index, refresh uv, or update the CLI. Updates apply
+to future agent skill loading. A running agent may retain its loaded instructions.
 """
 
 
 def _run_skill_command(args_list: list[str], *, stdout: TextIO) -> int:
     parser = CliArgumentParser(prog=f"{PROGRAM_NAME} skill", add_help=False)
-    parser.add_argument("action", choices=("install", "remove"))
+    parser.add_argument("action", choices=("install", "remove", "status"))
     parser.add_argument("--skills-dir", type=Path)
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(args_list)
-    if args.action == "install" and args.force:
-        raise UsageError("--force is valid only with 'skill remove'.")
+    if args.action == "status" and args.force:
+        raise UsageError("--force is valid only with 'skill install' or 'skill remove'.")
     root = args.skills_dir.resolve() if args.skills_dir else None
-    result = install_skill(root) if args.action == "install" else remove_skill(root, force=args.force)
+    if args.action == "install":
+        result = install_skill(root, force=args.force, version=__version__)
+    elif args.action == "remove":
+        result = remove_skill(root, force=args.force)
+    else:
+        result = skill_status(root, version=__version__)
     if args.json:
         stdout.write(json.dumps({"ok": True, "mode": f"skill_{args.action}", **result}, indent=2) + "\n")
     elif args.action == "install":
         verb = "Installed" if result["created"] else "Updated" if result["updated"] else "Already installed"
         stdout.write(f"{verb} {result['path']}\n")
+    elif args.action == "status":
+        for key, value in result.items():
+            label = key.replace("_", " ").capitalize()
+            display = (
+                "not applicable" if value is None else str(value).lower() if isinstance(value, bool) else str(value)
+            )
+            stdout.write(f"{label}: {display}\n")
     elif result["removed"]:
         stdout.write(f"Removed {result['path']}\n")
     else:

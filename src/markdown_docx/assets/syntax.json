@@ -1,7 +1,7 @@
 {
   "format": "markdown-docx",
-  "version": "0.1.0",
-  "text": "markdown-docx 0.1.0 syntax\n\nSupported Markdown:\n  ATX headings, paragraphs, emphasis, strong text, inline code, hard line breaks, fenced code blocks, blockquotes, ordered and unordered lists, pipe tables, and images.\n\nMetadata comments:\n  document metadata must be first\n  section metadata starts a next-page section\n  <!-- markdown-docx: page-break --> inserts a page break\n  table metadata must immediately precede a pipe table\n  image metadata must immediately precede a standalone image\n\nLengths use in, cm, mm, or pt. Image widths may also use percentages.\n\nUnsupported in 0.1.0:\n  links, raw HTML, task lists, footnotes, horizontal rules, indented code blocks, multi-paragraph list items, DOTX, floating images, headers and footers from Markdown, page-number fields, and direct OOXML features.",
+  "version": "0.2.0",
+  "text": "markdown-docx 0.2.0 syntax\n\nSupported Markdown:\n  ATX headings, paragraphs, emphasis, strong text, inline code, hard line breaks, fenced code blocks, blockquotes, ordered and unordered lists, pipe tables, and images.\n\nMetadata comments:\n  document metadata must be first\n  section metadata starts a next-page section\n  <!-- markdown-docx: page-break --> inserts a page break\n  table metadata must immediately precede a pipe table\n  image metadata must immediately precede a standalone image\n\nLengths use in, cm, mm, or pt. Image widths may also use percentages.\n\nUnsupported in 0.2.0:\n  links, raw HTML, task lists, footnotes, horizontal rules, indented code blocks, multi-paragraph list items, DOTX, floating images, headers and footers from Markdown, page-number fields, and direct OOXML features.",
   "page_sizes": ["letter", "legal", "a4", "custom"],
   "orientations": ["portrait", "landscape"],
   "length_units": ["in", "cm", "mm", "pt"],

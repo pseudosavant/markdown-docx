@@ -264,7 +264,7 @@ def _consume_blockquote(tokens: list[Token], index: int, input_path: str) -> tup
     index += 1
     while index < len(tokens) and tokens[index].type != "blockquote_close":
         if tokens[index].type != "paragraph_open":
-            _unsupported("Blockquotes may contain paragraphs only in 0.1.0.", tokens[index], input_path)
+            _unsupported("Blockquotes may contain paragraphs only in 0.2.0.", tokens[index], input_path)
         paragraph, index = _consume_paragraph(tokens, index, input_path)
         if any(fragment.kind == "image" for fragment in paragraph.fragments):
             _unsupported("Images nested in blockquotes are not supported.", opening, input_path)
@@ -299,7 +299,7 @@ def _consume_list(
         if start is not None and int(start) != 1:
             raise ParseError(
                 "ordered_list_start_unsupported",
-                "Ordered lists must begin with 1 in 0.1.0.",
+                "Ordered lists must begin with 1 in 0.2.0.",
                 line=_token_line(opening),
                 input_path=input_path,
             )

@@ -55,7 +55,7 @@ def parse_inline(token: Token, *, line: int, input_path: str | None) -> list[Inl
             )
         elif child_type in {"link_open", "link_close"}:
             raise UnsupportedFeatureError(
-                "Links require a public python-docx hyperlink creation API and are not supported in 0.1.0.",
+                "Links require a public python-docx hyperlink creation API and are not supported in 0.2.0.",
                 line=line,
                 input_path=input_path,
             )

@@ -60,6 +60,9 @@ jobs:
       - name: Run tests
         run: uv run pytest
 
+      - name: Smoke-test editable skill lifecycle
+        run: uv run python scripts/smoke_skill.py --expected-source local
+
   visual-smoke:
     runs-on: ubuntu-latest
     steps:
@@ -115,6 +118,7 @@ jobs:
           .wheel-smoke/bin/python -m pip install dist/*.whl
           .wheel-smoke/bin/markdown-docx --version
           .wheel-smoke/bin/markdown-docx --syntax --json
+          .wheel-smoke/bin/python scripts/smoke_skill.py
           echo '# Wheel smoke test' > smoke.md
           .wheel-smoke/bin/markdown-docx smoke.md smoke.docx
 

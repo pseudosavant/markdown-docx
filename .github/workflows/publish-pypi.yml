@@ -42,6 +42,9 @@ jobs:
       - name: Run tests
         run: uv run pytest
 
+      - name: Smoke-test editable skill lifecycle
+        run: uv run python scripts/smoke_skill.py --expected-source local
+
       - name: Verify release tag matches package version
         if: github.event_name == 'release' && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
         shell: bash
@@ -83,6 +86,7 @@ jobs:
           .wheel-smoke/bin/python -m pip install dist/*.whl
           .wheel-smoke/bin/markdown-docx --version
           .wheel-smoke/bin/markdown-docx --inspect-template --json
+          .wheel-smoke/bin/python scripts/smoke_skill.py
 
       - name: Upload distributions
         uses: actions/upload-artifact@v7.0.1
