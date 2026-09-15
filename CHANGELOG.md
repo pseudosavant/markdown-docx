@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0
+
+- Convert Markdown links into native, clickable, editable Word hyperlinks in paragraphs, headings, blockquotes, lists, and table cells.
+- Preserve formatted link labels, optional title tooltips, and linked inline images. Support reference links, angle-bracket autolinks, email links, and relative file destinations.
+- Preserve template hyperlink styles and supply a theme-aware default when needed. Keep hyperlink OOXML creation isolated until python-docx provides a public authoring API.
+- Update syntax discovery, managed skill guidance, documentation, and the showcase. Add hyperlink parsing, rendering, relationship, and CLI regression tests.
+- Continue rejecting empty destinations and document-local bookmark links with line-aware diagnostics.
+
 ## 0.2.0
 
 - Synchronize existing pristine managed skills to the running CLI version during normal commands.

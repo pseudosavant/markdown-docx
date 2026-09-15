@@ -303,6 +303,7 @@ The current release supports:
 - ATX headings from `#` through `######`
 - Paragraphs and standard soft or hard line breaks
 - Emphasis, strong emphasis, and inline backtick code
+- Markdown links with formatted labels and optional titles
 - Fenced code blocks
 - Blockquotes containing paragraphs
 - Ordered and unordered lists, including mixed nesting
@@ -321,7 +322,14 @@ The following syntax is intentionally unsupported:
 - Images inside table cells or blockquotes
 - Arbitrary Markdown extensions
 
-Links are currently rejected. `python-docx` 1.2.0 can read hyperlinks but has no supported public API for creating them. The source alt text for images remains meaningful Markdown content, but the same library release has no public API for embedding it in a Word drawing. A rendered document containing images reports `image_alt_text_not_embedded` in its warning list.
+Links such as `[link text](https://example.com)` become native, clickable, editable Word hyperlinks. Labels preserve bold, italic, inline code, and line breaks. Optional Markdown titles become Word tooltips. Links work in paragraphs, headings, blockquotes, lists, and table cells. Reference links, angle-bracket autolinks, email links, relative file links, and linked inline images are supported wherever their content is allowed. Destinations are stored without fetching them. Relative file links are resolved by Word relative to the output document. Bare URLs remain plain text. Empty destinations and document-local links such as `[heading](#heading)` are rejected. Heading bookmarks are not generated.
+
+```markdown
+Read the [**project documentation**](https://example.com/docs "Read the guide").
+Contact [the team](mailto:team@example.com).
+```
+
+The source alt text for images remains meaningful Markdown content, but `python-docx` 1.2.0 has no public API for embedding it in a Word drawing. A rendered document containing images reports `image_alt_text_not_embedded` in its warning list.
 
 ## Automation and safety
 
@@ -424,7 +432,7 @@ uvx --refresh --from . markdown-docx sample\showcase.md sample\showcase.docx --f
 
 ## Design and compatibility
 
-Production code uses only documented public `python-docx` APIs. It does not write OOXML directly and does not call private library members. Tests may inspect generated package XML read-only. See [public API capabilities](docs/public-api-capabilities.md) for the complete decision record.
+Production code uses documented public `python-docx` APIs with one isolated exception. `src/markdown_docx/hyperlinks.py` creates native hyperlink OOXML because `python-docx` 1.2.0 has no public hyperlink creation API. Run formatting, styles, relationship registration, and document saving use library APIs. Replace this helper when upstream supports hyperlink creation. Tests enforce the boundary and inspect generated package XML read-only. See [public API capabilities](docs/public-api-capabilities.md) for the complete decision record.
 
 Word is the primary compatibility target. LibreOffice Writer is used as a visual smoke-test engine. Differences in pagination or font metrics can occur between layout engines.
 

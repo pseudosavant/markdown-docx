@@ -12,7 +12,7 @@ name: markdown-docx
 description: Existing skill description
 metadata:
   managed-by: markdown-docx
-  managed-version: "0.2.0"
+  managed-version: "0.3.0"
   managed-content-sha256: "sha256:<64 lowercase hexadecimal characters>"
 ---
 ```

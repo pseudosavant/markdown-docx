@@ -71,7 +71,7 @@ def test_render_json_is_clean_and_structured(tmp_path: Path) -> None:
 
 def test_json_error_uses_stdout_only(tmp_path: Path) -> None:
     source = tmp_path / "bad.md"
-    source.write_text("[link](https://example.com)\n", encoding="utf-8")
+    source.write_text("[link](#heading)\n", encoding="utf-8")
     code, stdout, stderr = invoke([str(source), "--json"])
     payload = json.loads(stdout)
     assert code == 6

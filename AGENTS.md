@@ -10,8 +10,8 @@ This repository contains `markdown-docx`, a strict Python CLI that converts cons
 
 ## Core rules
 
-- Use only supported public `python-docx` APIs in production code.
-- Never edit OOXML parts directly in production code.
+- Use only supported public `python-docx` APIs in production code, except for the isolated hyperlink helper.
+- Direct OOXML creation is allowed only in `src/markdown_docx/hyperlinks.py` to create native hyperlinks. Replace this helper when a supported public API becomes available.
 - Preserve normal Markdown meaning and keep Word metadata in invisible reserved HTML comments.
 - Reject unsupported behavior with stable, line-aware diagnostics.
 - Treat Word sections as layout boundaries. Headings never create sections.

@@ -219,6 +219,7 @@ table:
 | Emphasis | *italic cell text* |
 | Code | `cell_code()` |
 | Nested | ***bold italic cell text*** |
+| Hyperlink | [**Project documentation**](https://github.com/pseudosavant/markdown-docx "Open the project") |
 
 The next illustration has no image metadata. Its large natural width is clamped to the usable page width by the renderer.
 
@@ -307,4 +308,4 @@ section: default
 
 The final section returns to letter paper, portrait orientation, inch-based margins, and the document-level style and font mappings.
 
-The generated file remains a normal editable `.docx`. Headings, paragraphs, quotes, code, lists, tables, images, page breaks, and sections are all native Word content.
+The generated file remains a normal editable `.docx`. Headings, paragraphs, quotes, code, lists, tables, hyperlinks, images, page breaks, and sections are all native Word content. Read the [project documentation](https://github.com/pseudosavant/markdown-docx) for more examples.

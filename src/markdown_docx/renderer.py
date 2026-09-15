@@ -15,6 +15,7 @@ from docx.shared import Emu
 from docx.text.paragraph import Paragraph
 
 from markdown_docx.errors import MarkdownDocxError, RenderError
+from markdown_docx.hyperlinks import HyperlinkWriter
 from markdown_docx.images import ImageLoader, rendered_width
 from markdown_docx.models import (
     CodeBlock,
@@ -205,19 +206,27 @@ def _render_fragments(
     input_path: str,
 ) -> bool:
     image_seen = False
+    hyperlink: HyperlinkWriter | None = None
     for fragment in fragments:
+        if fragment.kind == "link_open":
+            hyperlink = HyperlinkWriter(paragraph, fragment.href or "", fragment.title)
+            continue
+        if fragment.kind == "link_close":
+            hyperlink = None
+            continue
+        container = hyperlink or paragraph
         if fragment.kind == "break":
-            paragraph.add_run().add_break(WD_BREAK.LINE)
+            container.add_run().add_break(WD_BREAK.LINE)
         elif fragment.kind == "image":
             asset = image_loader.load(fragment.src or "", line=line, input_path=input_path)
             width = min(asset.natural_width, settings.usable_width)
-            run = paragraph.add_run()
+            run = container.add_run()
             run.bold = fragment.bold or None
             run.italic = fragment.italic or None
             run.add_picture(BytesIO(asset.data), width=Emu(width))
             image_seen = True
         else:
-            run = paragraph.add_run(fragment.text or "")
+            run = container.add_run(fragment.text or "")
             run.bold = fragment.bold or None
             run.italic = fragment.italic or None
             if fragment.code:

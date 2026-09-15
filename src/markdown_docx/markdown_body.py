@@ -16,14 +16,7 @@ def parse_inline(token: Token, *, line: int, input_path: str | None) -> list[Inl
     bold = False
     italic = False
     children = token.children or []
-    if FOOTNOTE_PATTERN.search(token.content) and any(child.type == "link_open" for child in children):
-        raise UnsupportedFeatureError(
-            "Footnote syntax is not supported.",
-            line=line,
-            input_path=input_path,
-            code="unsupported_markdown",
-        )
-    for child in children:
+    for index, child in enumerate(children):
         child_type = child.type
         if child_type == "text":
             _reject_footnote_text(child.content, line=line, input_path=input_path)
@@ -53,12 +46,31 @@ def parse_inline(token: Token, *, line: int, input_path: str | None) -> list[Inl
                     italic=italic,
                 )
             )
-        elif child_type in {"link_open", "link_close"}:
-            raise UnsupportedFeatureError(
-                "Links require a public python-docx hyperlink creation API and are not supported in 0.2.0.",
-                line=line,
-                input_path=input_path,
-            )
+        elif child_type == "link_open":
+            if (
+                index + 1 < len(children)
+                and children[index + 1].content.startswith("^")
+                and FOOTNOTE_PATTERN.search(token.content)
+            ):
+                raise UnsupportedFeatureError(
+                    "Footnote syntax is not supported.",
+                    line=line,
+                    input_path=input_path,
+                    code="unsupported_markdown",
+                )
+            raw_href = child.attrGet("href")
+            href = raw_href if isinstance(raw_href, str) else ""
+            if not href or href.startswith("#"):
+                raise UnsupportedFeatureError(
+                    "Links require a non-empty external destination. Document bookmark links are not supported.",
+                    line=line,
+                    input_path=input_path,
+                )
+            raw_title = child.attrGet("title")
+            title = raw_title if isinstance(raw_title, str) else None
+            fragments.append(InlineFragment(kind="link_open", href=href, title=title))
+        elif child_type == "link_close":
+            fragments.append(InlineFragment(kind="link_close"))
         elif child_type == "html_inline":
             raise UnsupportedFeatureError(
                 "Raw inline HTML is not supported.",

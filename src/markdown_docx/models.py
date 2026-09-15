@@ -89,13 +89,15 @@ class ImageOptions:
 
 @dataclass(slots=True)
 class InlineFragment:
-    kind: Literal["text", "break", "image"]
+    kind: Literal["text", "break", "image", "link_open", "link_close"]
     text: str | None = None
     src: str | None = None
     alt: str | None = None
     bold: bool = False
     italic: bool = False
     code: bool = False
+    href: str | None = None
+    title: str | None = None
 
 
 @dataclass(slots=True)

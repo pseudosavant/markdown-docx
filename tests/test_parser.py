@@ -130,7 +130,8 @@ def test_image_metadata_parses_width_and_alignment() -> None:
 @pytest.mark.parametrize(
     ("source", "code"),
     [
-        ("[link](https://example.com)\n", "unsupported_feature"),
+        ("[link](#heading)\n", "unsupported_feature"),
+        ("[link]()\n", "unsupported_feature"),
         ("<span>raw</span>\n", "unsupported_markdown"),
         ("Title\n=====\n", "unsupported_markdown"),
         ("---\n", "unsupported_markdown"),

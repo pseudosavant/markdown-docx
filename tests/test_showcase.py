@@ -69,6 +69,7 @@ def test_showcase_covers_portable_markdown_and_metadata_features() -> None:
     assert any(fragment.code for fragment in text_fragments)
     assert any(fragment.kind == "break" for fragment in text_fragments)
     assert any(fragment.kind == "image" for fragment in text_fragments)
+    assert any(fragment.kind == "link_open" for fragment in text_fragments)
     assert any(
         "source line and continues through a soft source break" in (fragment.text or "") for fragment in text_fragments
     )
@@ -99,6 +100,7 @@ def test_showcase_covers_portable_markdown_and_metadata_features() -> None:
     assert any(fragment.bold for fragment in table_fragments)
     assert any(fragment.italic for fragment in table_fragments)
     assert any(fragment.code for fragment in table_fragments)
+    assert any(fragment.kind == "link_open" for fragment in table_fragments)
 
     images = [block for block in model.blocks if isinstance(block, ImageBlock)]
     assert {image.options.alignment for image in images} == {"left", "center", "right"}
@@ -134,3 +136,5 @@ def test_showcase_renders_as_editable_native_word_content(tmp_path: Path) -> Non
     assert len(document.inline_shapes) == 8
     assert any(paragraph.text == "The Great Lunch Bag Chase" for paragraph in document.paragraphs)
     assert any(paragraph.text == "Back to Document Defaults" for paragraph in document.paragraphs)
+    assert any(paragraph.hyperlinks for paragraph in document.paragraphs)
+    assert any(cell.paragraphs[0].hyperlinks for table in document.tables for row in table.rows for cell in row.cells)
