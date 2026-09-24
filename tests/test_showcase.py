@@ -67,9 +67,17 @@ def test_showcase_covers_portable_markdown_and_metadata_features() -> None:
     assert any(fragment.italic and not fragment.bold for fragment in text_fragments)
     assert any(fragment.bold and fragment.italic for fragment in text_fragments)
     assert any(fragment.code for fragment in text_fragments)
+    assert any(fragment.strike for fragment in text_fragments)
+    assert any(fragment.superscript for fragment in text_fragments)
+    assert any(fragment.subscript for fragment in text_fragments)
     assert any(fragment.kind == "break" for fragment in text_fragments)
     assert any(fragment.kind == "image" for fragment in text_fragments)
     assert any(fragment.kind == "link_open" for fragment in text_fragments)
+    assert any(
+        fragment.kind == "link_open" and fragment.href == "https://example.com/docs" for fragment in text_fragments
+    )
+    assert any(heading.anchor == "setext-heading-level-two" for heading in headings)
+    assert any(isinstance(block, CodeBlock) and 'source = "showcase.md"' in block.text for block in model.blocks)
     assert any(
         "source line and continues through a soft source break" in (fragment.text or "") for fragment in text_fragments
     )

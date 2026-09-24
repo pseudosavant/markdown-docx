@@ -95,6 +95,9 @@ class InlineFragment:
     alt: str | None = None
     bold: bool = False
     italic: bool = False
+    strike: bool = False
+    superscript: bool = False
+    subscript: bool = False
     code: bool = False
     href: str | None = None
     title: str | None = None

@@ -140,7 +140,7 @@ That is why all three dogs appear to be listening.
 
 # Capability Lab
 
-Everything after this point is intentionally functional. It exercises the portable document features in `markdown-docx` 0.1.0 while remaining readable as ordinary Markdown.
+Everything after this point is intentionally functional. It exercises the portable document features in `markdown-docx` while remaining readable as ordinary Markdown.
 
 ## Text and hierarchy
 
@@ -149,6 +149,13 @@ and continues through a soft source break that becomes a normal space.
 
 This line ends with an explicit hard break.\
 This sentence begins on the next line in the same Word paragraph.
+
+This line shows ~~strikethrough~~, H~2~O, and x^2^. A bare URL such as https://example.com/docs becomes a native hyperlink.
+
+Setext heading level two
+------------------------
+
+Setext headings create the same Word heading and bookmark as hash headings.
 
 ### Heading level three
 
@@ -171,6 +178,11 @@ source = Path("showcase.md")
 target = source.with_suffix(".docx")
 print(target)
 ```
+
+## Indented code
+
+    source = "showcase.md"
+    print(source)
 
 <!-- markdown-docx: page-break -->
 

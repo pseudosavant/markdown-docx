@@ -8,6 +8,8 @@ from typing import Any, NoReturn, cast
 from markdown_it import MarkdownIt
 from markdown_it.token import Token
 from mdit_py_plugins.footnote import footnote_plugin
+from mdit_py_plugins.subscript import sub_plugin
+from mdit_py_plugins.superscript import superscript_plugin
 
 from markdown_docx.bookmarks import resolve_heading_links
 from markdown_docx.errors import ParseError, UnsupportedFeatureError
@@ -58,8 +60,10 @@ def parse_document(
     input_path: Path | None,
     source_name: str,
 ) -> DocumentModel:
-    markdown = MarkdownIt("commonmark", {"html": True}).enable("table")
+    markdown = MarkdownIt("commonmark", {"html": True, "linkify": True}).enable(["table", "linkify", "strikethrough"])
     markdown.use(footnote_plugin, inline=False, move_to_end=False, always_match_refs=True)
+    markdown.use(sub_plugin)
+    markdown.use(superscript_plugin)
     try:
         tokens = markdown.parse(source)
     except Exception as exc:
@@ -174,7 +178,8 @@ def parse_document(
             blocks.append(CodeBlock(line=line, text=token.content))
             index += 1
         elif token_type == "code_block":
-            _unsupported("Indented code blocks are not supported. Use a fenced code block.", token, input_label)
+            blocks.append(CodeBlock(line=line, text=token.content))
+            index += 1
         elif token_type == "blockquote_open":
             quote_blocks, index = _consume_blockquote(tokens, index, input_label)
             blocks.extend(quote_blocks)
@@ -271,8 +276,6 @@ def _consume_paragraph(tokens: list[Token], index: int, input_path: str) -> tupl
 
 def _consume_heading(tokens: list[Token], index: int, input_path: str) -> tuple[HeadingBlock, int]:
     opening = tokens[index]
-    if not opening.markup or set(opening.markup) != {"#"}:
-        _unsupported("Setext headings are not supported. Use ATX headings beginning with #.", opening, input_path)
     if index + 2 >= len(tokens) or tokens[index + 1].type != "inline" or tokens[index + 2].type != "heading_close":
         _unsupported("This heading structure is not supported.", opening, input_path)
     level = int(opening.tag[1:])

@@ -340,11 +340,11 @@ The packaged template provides these default style mappings. Supplied templates 
 
 The current release supports:
 
-- ATX headings from `#` through `######`
+- ATX headings from `#` through `######` and Setext headings
 - Paragraphs and standard soft or hard line breaks
-- Emphasis, strong emphasis, and inline backtick code
-- Markdown links with formatted labels and optional titles
-- Fenced code blocks
+- Emphasis, strong emphasis, strikethrough, superscript, subscript, and inline backtick code
+- Markdown links with formatted labels and optional titles, plus bare URL links
+- Fenced and indented code blocks
 - Blockquotes containing paragraphs
 - Ordered and unordered lists, including mixed nesting
 - Pipe tables with inline text formatting
@@ -354,14 +354,15 @@ The current release supports:
 The following syntax is intentionally unsupported:
 
 - Raw HTML and non-reserved HTML comments
-- Setext headings and horizontal rules
-- Indented code blocks
+- Horizontal rules
 - Task lists
 - Tables, images, code blocks, or blockquotes nested inside list items
 - Images inside table cells or blockquotes
 - Arbitrary Markdown extensions
 
-Links such as `[link text](https://example.com)` become native, clickable, editable Word hyperlinks. Labels preserve bold, italic, inline code, and line breaks. Optional Markdown titles become Word tooltips. Links work in paragraphs, headings, blockquotes, lists, and table cells. Reference links, angle-bracket autolinks, email links, relative file links, and linked inline images are supported wherever their content is allowed. Destinations are stored without fetching them. Relative file links are resolved by Word relative to the output document. Bare URLs remain plain text. Empty destinations are rejected. Every heading creates a bookmark. Link to its slug with `[Details](#details)`, including before the heading. Slugs use plain heading text and image labels, normalized to NFC and lowercase. Punctuation is removed except underscores and hyphens. Whitespace becomes a hyphen. Empty slugs use `section`. Duplicates receive `-1`, `-2`, and later available suffixes in document order. Unicode and percent-encoded fragments are supported. Fragments must match the slug exactly. Missing targets produce `internal_link_unresolved` with the source line. Word bookmark names are generated separately to fit Word constraints.
+Links such as `[link text](https://example.com)` and bare URLs become native, clickable, editable Word hyperlinks. Labels preserve bold, italic, strikethrough, superscript, subscript, inline code, and line breaks. Optional Markdown titles become Word tooltips. Links work in paragraphs, headings, blockquotes, lists, and table cells. Reference links, angle-bracket autolinks, email links, relative file links, and linked inline images are supported wherever their content is allowed. Destinations are stored without fetching them. Relative file links are resolved by Word relative to the output document. Empty destinations are rejected. Every heading creates a bookmark. Link to its slug with `[Details](#details)`, including before the heading. Slugs use plain heading text and image labels, normalized to NFC and lowercase. Punctuation is removed except underscores and hyphens. Whitespace becomes a hyphen. Empty slugs use `section`. Duplicates receive `-1`, `-2`, and later available suffixes in document order. Unicode and percent-encoded fragments are supported. Fragments must match the slug exactly. Missing targets produce `internal_link_unresolved` with the source line. Word bookmark names are generated separately to fit Word constraints.
+
+Use `~~deleted~~` for strikethrough, `x^2^` for superscript, and `H~2~O` for subscript. Setext headings use `===` for level one and `---` for level two on the next line. Indent code by four spaces to create a code block.
 
 ```markdown
 Read the [**project documentation**](https://example.com/docs "Read the guide").

@@ -74,3 +74,16 @@ def test_unicode_round_trips(tmp_path: Path) -> None:
     document = Document(output)
     assert document.paragraphs[0].text == "Café"
     assert document.paragraphs[1].text == "日本語 and 😀 remain editable."
+
+
+def test_extended_markdown_formats_as_native_word_runs(tmp_path: Path) -> None:
+    output = render(tmp_path, "Title\n=====\n\n~~old~~ H~2~O x^2^ https://example.com.\n\n    code line\n")
+    document = Document(output)
+    assert [paragraph.style.name for paragraph in document.paragraphs] == ["Heading 1", "Normal", "Code Block"]
+    paragraph = document.paragraphs[1]
+    assert any(run.text == "old" and run.font.strike for run in paragraph.runs)
+    assert any(run.text == "2" and run.font.subscript for run in paragraph.runs)
+    assert any(run.text == "2" and run.font.superscript for run in paragraph.runs)
+    assert paragraph.hyperlinks[0].url == "https://example.com"
+    assert paragraph.hyperlinks[0].text == "https://example.com"
+    assert document.paragraphs[2].text == "code line"

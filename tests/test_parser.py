@@ -150,9 +150,7 @@ def test_image_metadata_uses_plain_label_text_and_optional_title(label: str, exp
     [
         ("[link]()\n", "unsupported_feature"),
         ("<span>raw</span>\n", "unsupported_markdown"),
-        ("Title\n=====\n", "unsupported_markdown"),
         ("---\n", "unsupported_markdown"),
-        ("    indented\n", "unsupported_markdown"),
         ("- [ ] task\n", "unsupported_markdown"),
     ],
 )
@@ -160,6 +158,27 @@ def test_unsupported_markdown_is_rejected(source: str, code: str) -> None:
     with pytest.raises(UnsupportedFeatureError) as excinfo:
         parse(source)
     assert excinfo.value.context.code == code
+
+
+def test_extended_inline_syntax_and_bare_url() -> None:
+    paragraph = parse("~~gone~~ H~2~O x^2^ https://example.com/next.").blocks[0]
+    assert isinstance(paragraph, ParagraphBlock)
+    assert any(fragment.text == "gone" and fragment.strike for fragment in paragraph.fragments)
+    assert any(fragment.text == "2" and fragment.subscript for fragment in paragraph.fragments)
+    assert any(fragment.text == "2" and fragment.superscript for fragment in paragraph.fragments)
+    assert any(
+        fragment.kind == "link_open" and fragment.href == "https://example.com/next" for fragment in paragraph.fragments
+    )
+    assert paragraph.fragments[-1].text == "."
+
+
+def test_setext_headings_and_indented_code_blocks() -> None:
+    blocks = parse("Heading one\n===========\n\nHeading two\n-----------\n\n    indented code\n").blocks
+    assert [type(block) for block in blocks] == [HeadingBlock, HeadingBlock, CodeBlock]
+    assert [block.level for block in blocks if isinstance(block, HeadingBlock)] == [1, 2]
+    assert [block.anchor for block in blocks if isinstance(block, HeadingBlock)] == ["heading-one", "heading-two"]
+    assert isinstance(blocks[-1], CodeBlock)
+    assert blocks[-1].text == "indented code\n"
 
 
 def test_footnote_like_text_inside_code_is_allowed() -> None:

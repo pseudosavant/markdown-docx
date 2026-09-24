@@ -27,18 +27,42 @@ def parse_inline(token: Token, *, line: int, input_path: str | None) -> list[Inl
     fragments: list[InlineFragment] = []
     bold = False
     italic = False
+    strike = False
+    superscript = False
+    subscript = False
     children = token.children or []
     in_link = False
     reference_line = line
     for child in children:
         child_type = child.type
         if child_type == "text":
-            _append_text(fragments, child.content, bold=bold, italic=italic)
+            _append_text(
+                fragments,
+                child.content,
+                bold=bold,
+                italic=italic,
+                strike=strike,
+                superscript=superscript,
+                subscript=subscript,
+            )
         elif child_type == "code_inline":
-            fragments.append(InlineFragment(kind="text", text=child.content, bold=bold, italic=italic, code=True))
+            fragments.append(
+                InlineFragment(
+                    kind="text",
+                    text=child.content,
+                    bold=bold,
+                    italic=italic,
+                    strike=strike,
+                    superscript=superscript,
+                    subscript=subscript,
+                    code=True,
+                )
+            )
         elif child_type == "softbreak":
             reference_line += 1
-            _append_text(fragments, " ", bold=bold, italic=italic)
+            _append_text(
+                fragments, " ", bold=bold, italic=italic, strike=strike, superscript=superscript, subscript=subscript
+            )
         elif child_type == "hardbreak":
             reference_line += 1
             fragments.append(InlineFragment(kind="break", bold=bold, italic=italic))
@@ -50,6 +74,18 @@ def parse_inline(token: Token, *, line: int, input_path: str | None) -> list[Inl
             italic = True
         elif child_type == "em_close":
             italic = False
+        elif child_type == "s_open":
+            strike = True
+        elif child_type == "s_close":
+            strike = False
+        elif child_type == "sup_open":
+            superscript = True
+        elif child_type == "sup_close":
+            superscript = False
+        elif child_type == "sub_open":
+            subscript = True
+        elif child_type == "sub_close":
+            subscript = False
         elif child_type == "image":
             if _contains_note(child):
                 raise UnsupportedFeatureError(
@@ -68,6 +104,9 @@ def parse_inline(token: Token, *, line: int, input_path: str | None) -> list[Inl
                     title=raw_title if isinstance(raw_title, str) else None,
                     bold=bold,
                     italic=italic,
+                    strike=strike,
+                    superscript=superscript,
+                    subscript=subscript,
                 )
             )
         elif child_type == "link_open":
@@ -138,6 +177,9 @@ def _append_text(
     *,
     bold: bool,
     italic: bool,
+    strike: bool,
+    superscript: bool,
+    subscript: bool,
 ) -> None:
     if not text:
         return
@@ -146,8 +188,21 @@ def _append_text(
         and fragments[-1].kind == "text"
         and fragments[-1].bold == bold
         and fragments[-1].italic == italic
+        and fragments[-1].strike == strike
+        and fragments[-1].superscript == superscript
+        and fragments[-1].subscript == subscript
         and not fragments[-1].code
     ):
         fragments[-1].text = (fragments[-1].text or "") + text
         return
-    fragments.append(InlineFragment(kind="text", text=text, bold=bold, italic=italic))
+    fragments.append(
+        InlineFragment(
+            kind="text",
+            text=text,
+            bold=bold,
+            italic=italic,
+            strike=strike,
+            superscript=superscript,
+            subscript=subscript,
+        )
+    )

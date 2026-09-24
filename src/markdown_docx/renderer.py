@@ -287,6 +287,11 @@ def _render_fragments(
             run = container.add_run()
             run.bold = fragment.bold or None
             run.italic = fragment.italic or None
+            run.font.strike = fragment.strike or None
+            if fragment.superscript:
+                run.font.superscript = True
+            elif fragment.subscript:
+                run.font.subscript = True
             picture = run.add_picture(BytesIO(asset.data), width=Emu(width))
             picture.description = fragment.alt or ""
             picture.title = fragment.title
@@ -294,6 +299,11 @@ def _render_fragments(
             run = container.add_run(fragment.text or "")
             run.bold = fragment.bold or None
             run.italic = fragment.italic or None
+            run.font.strike = fragment.strike or None
+            if fragment.superscript:
+                run.font.superscript = True
+            elif fragment.subscript:
+                run.font.subscript = True
             if fragment.code:
                 run.font.name = monospace
 
