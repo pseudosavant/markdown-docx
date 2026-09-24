@@ -98,6 +98,7 @@ class InlineFragment:
     code: bool = False
     href: str | None = None
     title: str | None = None
+    anchor: str | None = None
 
 
 @dataclass(slots=True)
@@ -112,6 +113,7 @@ class HeadingBlock:
     line: int
     level: int
     fragments: list[InlineFragment]
+    anchor: str = ""
 
 
 @dataclass(slots=True)

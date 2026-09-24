@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import tempfile
+from hashlib import sha256
 from io import BytesIO
 from pathlib import Path
 from typing import Any
@@ -63,6 +64,17 @@ def render_docx(
     reusable = _reusable_initial_paragraph(document)
     warnings = list(model.warnings)
     lists: dict[int, ListInstance] = {}
+    bookmarks: dict[str, str] = {}
+    reserved_names = {bookmark.name.casefold() for bookmark in document.bookmarks}
+    for heading in (block for block in model.blocks if isinstance(block, HeadingBlock)):
+        base = "md_" + sha256(heading.anchor.encode("utf-8")).hexdigest()[:28]
+        name = base
+        suffix = 0
+        while name.casefold() in reserved_names:
+            suffix += 1
+            name = f"{base}_{suffix}"
+        bookmarks[heading.anchor] = name
+        reserved_names.add(name.casefold())
 
     try:
         for block in model.blocks:
@@ -78,10 +90,12 @@ def render_docx(
                     style=model.options.styles.headings[block.level],
                     reusable=reusable,
                 )
+                document.bookmarks.add(bookmarks[block.anchor], paragraph=paragraph)
                 _render_fragments(
                     paragraph,
                     block.fragments,
                     image_loader=image_loader,
+                    bookmarks=bookmarks,
                     settings=current_settings,
                     monospace=model.options.fonts.monospace,
                     line=block.line,
@@ -96,6 +110,7 @@ def render_docx(
                     paragraph,
                     block.fragments,
                     image_loader=image_loader,
+                    bookmarks=bookmarks,
                     settings=current_settings,
                     monospace=model.options.fonts.monospace,
                     line=block.line,
@@ -134,6 +149,7 @@ def render_docx(
                     paragraph,
                     block.fragments,
                     image_loader=image_loader,
+                    bookmarks=bookmarks,
                     settings=current_settings,
                     monospace=model.options.fonts.monospace,
                     line=block.line,
@@ -146,6 +162,7 @@ def render_docx(
                     model=model,
                     settings=current_settings,
                     image_loader=image_loader,
+                    bookmarks=bookmarks,
                 )
             elif isinstance(block, ImageBlock):
                 paragraph, reusable = _new_paragraph(
@@ -215,6 +232,7 @@ def _render_fragments(
     fragments: list[InlineFragment],
     *,
     image_loader: ImageLoader,
+    bookmarks: dict[str, str],
     settings: SectionSettings,
     monospace: str,
     line: int,
@@ -223,7 +241,12 @@ def _render_fragments(
     hyperlink: HyperlinkWriter | None = None
     for fragment in fragments:
         if fragment.kind == "link_open":
-            hyperlink = HyperlinkWriter(paragraph, fragment.href or "", fragment.title)
+            hyperlink = HyperlinkWriter(
+                paragraph,
+                fragment.href or "",
+                fragment.title,
+                anchor=bookmarks[fragment.anchor] if fragment.anchor is not None else None,
+            )
             continue
         if fragment.kind == "link_close":
             hyperlink = None
@@ -255,6 +278,7 @@ def _render_table(
     model: DocumentModel,
     settings: SectionSettings,
     image_loader: ImageLoader,
+    bookmarks: dict[str, str],
 ) -> None:
     row_data = [block.headers, *block.rows]
     column_count = len(block.headers)
@@ -284,6 +308,7 @@ def _render_table(
                 paragraph,
                 cell_data.fragments,
                 image_loader=image_loader,
+                bookmarks=bookmarks,
                 settings=settings,
                 monospace=model.options.fonts.monospace,
                 line=block.line,

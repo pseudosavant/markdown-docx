@@ -74,9 +74,9 @@ def test_json_error_uses_stdout_only(tmp_path: Path) -> None:
     source.write_text("[link](#heading)\n", encoding="utf-8")
     code, stdout, stderr = invoke([str(source), "--json"])
     payload = json.loads(stdout)
-    assert code == 6
+    assert code == 3
     assert payload["ok"] is False
-    assert payload["error"]["code"] == "unsupported_feature"
+    assert payload["error"]["code"] == "internal_link_unresolved"
     assert payload["error"]["line"] == 1
     assert stderr == ""
 

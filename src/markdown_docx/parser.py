@@ -8,6 +8,7 @@ from typing import Any, NoReturn, cast
 from markdown_it import MarkdownIt
 from markdown_it.token import Token
 
+from markdown_docx.bookmarks import resolve_heading_links
 from markdown_docx.errors import ParseError, UnsupportedFeatureError
 from markdown_docx.markdown_body import is_standalone_image, is_task_item, parse_inline
 from markdown_docx.metadata import (
@@ -183,6 +184,7 @@ def parse_document(
             input_path=input_label,
             metadata_kind=pending.kind,
         )
+    resolve_heading_links(blocks, input_path=input_label)
     return DocumentModel(input_path=input_path, source_name=source_name, options=options, blocks=blocks)
 
 
@@ -265,7 +267,7 @@ def _consume_blockquote(tokens: list[Token], index: int, input_path: str) -> tup
     index += 1
     while index < len(tokens) and tokens[index].type != "blockquote_close":
         if tokens[index].type != "paragraph_open":
-            _unsupported("Blockquotes may contain paragraphs only in 0.3.4.", tokens[index], input_path)
+            _unsupported("Blockquotes may contain paragraphs only in 0.3.5.", tokens[index], input_path)
         paragraph, index = _consume_paragraph(tokens, index, input_path)
         if any(fragment.kind == "image" for fragment in paragraph.fragments):
             _unsupported("Images nested in blockquotes are not supported.", opening, input_path)

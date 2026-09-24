@@ -75,9 +75,9 @@ def parse_inline(token: Token, *, line: int, input_path: str | None) -> list[Inl
                 )
             raw_href = child.attrGet("href")
             href = raw_href if isinstance(raw_href, str) else ""
-            if not href or href.startswith("#"):
+            if not href:
                 raise UnsupportedFeatureError(
-                    "Links require a non-empty external destination. Document bookmark links are not supported.",
+                    "Links require a non-empty destination.",
                     line=line,
                     input_path=input_path,
                 )

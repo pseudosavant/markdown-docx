@@ -148,7 +148,6 @@ def test_image_metadata_uses_plain_label_text_and_optional_title(label: str, exp
 @pytest.mark.parametrize(
     ("source", "code"),
     [
-        ("[link](#heading)\n", "unsupported_feature"),
         ("[link]()\n", "unsupported_feature"),
         ("<span>raw</span>\n", "unsupported_markdown"),
         ("Title\n=====\n", "unsupported_markdown"),

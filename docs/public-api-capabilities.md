@@ -1,8 +1,8 @@
 # Public `python-docx` capability matrix
 
-`markdown-docx` pins `ps-python-docx` 1.3.3, which retains the `docx` import package. The executable probe is `tests/test_public_api_capabilities.py`.
+`markdown-docx` pins `ps-python-docx` 1.3.4, which retains the `docx` import package. The executable probe is `tests/test_public_api_capabilities.py`.
 
-| Capability | Public API in fork 1.3.3 | Current behavior |
+| Capability | Public API in fork 1.3.4 | Current behavior |
 | --- | --- | --- |
 | Open and save blank DOCX templates | Yes | Supported |
 | Enumerate and validate styles | Yes | Supported |
@@ -16,10 +16,11 @@
 | Create, align, and size tables | Yes | Supported |
 | Add inline pictures with preserved aspect ratio | Yes | Supported |
 | Align picture paragraphs | Yes | Supported |
+| Create and find bookmarks | Yes | Uses `Document.bookmarks` |
 | Create native hyperlinks | Yes | Uses `Paragraph.add_hyperlink`, `Hyperlink.add_run`, and tooltip support |
 | Set image alt text and titles | Yes | Uses `InlineShape.description` and `InlineShape.title` for standalone, inline, and linked images |
 
-The fork's public text API creates external hyperlinks with `Paragraph.add_hyperlink` and formatted label runs with `Hyperlink.add_run`. `src/markdown_docx/hyperlinks.py` applies the Hyperlink character style through public APIs. Existing template hyperlink styles are preserved. Optional link titles become tooltips. Empty destinations and document-local bookmark links are rejected with `unsupported_feature`. The library owns hyperlink XML and external relationships.
+The fork's public text API creates external hyperlinks with `Paragraph.add_hyperlink` and formatted label runs with `Hyperlink.add_run`. `src/markdown_docx/hyperlinks.py` applies the Hyperlink character style through public APIs. Existing template hyperlink styles are preserved. Optional link titles become tooltips. Empty destinations are rejected with `unsupported_feature`. Internal links use `Paragraph.add_hyperlink(anchor=...)` and heading targets use `Document.bookmarks.add`. The converter owns heading slugs and unresolved-target diagnostics. The library owns hyperlink XML and external relationships.
 
 `tests/test_public_api_boundary.py` forbids private and OOXML access throughout production code, including the hyperlink and theme font adapters. `tests/test_hyperlinks.py` checks saved relationships, text, formatting, titles, supported block contexts, and template styling.
 

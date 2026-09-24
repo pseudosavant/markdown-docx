@@ -130,7 +130,7 @@ def test_linked_inline_image_stays_clickable(tmp_path: Path, png_file: Path) -> 
     assert body.find(".//w:hyperlink/w:r/w:drawing", NS) is not None
 
 
-@pytest.mark.parametrize("destination", ["", "#heading"])
+@pytest.mark.parametrize("destination", [""])
 def test_unsupported_destinations_are_line_aware(destination: str) -> None:
     with pytest.raises(UnsupportedFeatureError) as excinfo:
         parse_document(f"Intro\n\n[link]({destination})", input_path=None, source_name="input.md")

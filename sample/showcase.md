@@ -174,6 +174,8 @@ print(target)
 
 <!-- markdown-docx: page-break -->
 
+[Jump to list kinds and depths](#list-kinds-and-depths).
+
 ## List starts and continuation paragraphs
 
 3. This ordered list begins at three.

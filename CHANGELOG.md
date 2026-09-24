@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.5
+
+- Generate native Word bookmarks for headings and support internal Markdown links such as `[Details](#details)`.
+- Resolve forward references, duplicate heading slugs, Unicode headings, and percent-encoded fragments.
+- Preserve existing template bookmark names and report unresolved links with source lines.
+- Use ps-python-docx 1.3.4 public bookmark and internal-hyperlink APIs.
+
 ## 0.3.4
 
 - Preserve ordered-list starting numbers, including zero, through ps-python-docx 1.3.3 public APIs.
