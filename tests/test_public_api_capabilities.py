@@ -12,7 +12,6 @@ from docx.enum.section import WD_ORIENT, WD_SECTION
 from docx.enum.style import WD_STYLE_TYPE
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Inches
-from docx.text.paragraph import Paragraph
 
 PNG_1X1 = base64.b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
@@ -24,7 +23,7 @@ def package_parts(path: Path) -> set[str]:
         return set(archive.namelist())
 
 
-def test_ps_python_docx_130_public_api_capability_matrix(tmp_path: Path) -> None:
+def test_ps_python_docx_131_public_api_capability_matrix(tmp_path: Path) -> None:
     source = tmp_path / "source.docx"
     output = tmp_path / "output.docx"
     document = Document()
@@ -70,6 +69,10 @@ def test_ps_python_docx_130_public_api_capability_matrix(tmp_path: Path) -> None
     assert shape.width == Inches(1)
     assert shape.height == Inches(1)
 
+    link = document.add_paragraph().add_hyperlink(address="https://example.com", tooltip="Details")
+    link.add_run("Example ")
+    link.add_run("bold").bold = True
+
     document.save(output)
     reopened = Document(output)
     output_parts = package_parts(output)
@@ -85,16 +88,20 @@ def test_ps_python_docx_130_public_api_capability_matrix(tmp_path: Path) -> None
     assert reopened.styles["Heading 1"].linked_style.font.theme_font == "major"
     assert len(reopened.tables) == 1
     assert len(reopened.inline_shapes) == 1
+    reopened_link = reopened.paragraphs[-1].hyperlinks[0]
+    assert reopened_link.url == "https://example.com"
+    assert reopened_link.tooltip == "Details"
+    assert reopened_link.text == "Example bold"
+    assert reopened_link.runs[1].bold is True
 
 
 def test_unsupported_authoring_capabilities_are_not_public() -> None:
-    assert not hasattr(Paragraph, "add_hyperlink")
     shape = Document().add_picture(BytesIO(PNG_1X1))
     assert not hasattr(shape, "alt_text")
     assert not hasattr(shape, "description")
 
 
 def test_only_the_fork_distribution_provides_docx() -> None:
-    assert metadata.version("ps-python-docx") == "1.3.0"
+    assert metadata.version("ps-python-docx") == "1.3.1"
     with pytest.raises(metadata.PackageNotFoundError):
         metadata.distribution("python-docx")

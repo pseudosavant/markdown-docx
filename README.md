@@ -335,7 +335,7 @@ Read the [**project documentation**](https://example.com/docs "Read the guide").
 Contact [the team](mailto:team@example.com).
 ```
 
-The source alt text for images remains meaningful Markdown content, but `ps-python-docx` 1.3.0 has no public API for embedding it in a Word drawing. A rendered document containing images reports `image_alt_text_not_embedded` in its warning list.
+The source alt text for images remains meaningful Markdown content, but `ps-python-docx` 1.3.1 has no public API for embedding it in a Word drawing. A rendered document containing images reports `image_alt_text_not_embedded` in its warning list.
 
 ## Automation and safety
 
@@ -438,9 +438,9 @@ uvx --refresh --from . markdown-docx sample\showcase.md sample\showcase.docx --f
 
 ## Design and compatibility
 
-Both development installs and published wheels use `ps-python-docx==1.3.0` from PyPI. It retains the `docx` import package and replaces the upstream `python-docx` distribution. Use `uv sync --locked --all-groups` and `uv run markdown-docx` when working from source. CI and the release workflow test a clean wheel installation from PyPI.
+Both development installs and published wheels use `ps-python-docx==1.3.1` from PyPI. It retains the `docx` import package and replaces the upstream `python-docx` distribution. Use `uv sync --locked --all-groups` and `uv run markdown-docx` when working from source. CI and the release workflow test a clean wheel installation from PyPI.
 
-Production code uses the public `docx` APIs provided by `ps-python-docx` 1.3.0. Theme fonts, style references, linked styles, and document defaults use public library APIs. The only OOXML exception is `src/markdown_docx/hyperlinks.py` for native hyperlink creation. Replace that helper when a supported creation API becomes available. Tests enforce this boundary and inspect saved theme data, style inheritance, and effective font selection. See [public API capabilities](docs/public-api-capabilities.md) for the decision record.
+Production code uses only the public `docx` APIs provided by `ps-python-docx` 1.3.1. Native hyperlinks, theme fonts, style references, linked styles, and document defaults use public library APIs. `src/markdown_docx/hyperlinks.py` applies Markdown styling through the public hyperlink API. Tests enforce the public API boundary and inspect saved hyperlinks, theme data, style inheritance, and effective font selection. See [public API capabilities](docs/public-api-capabilities.md) for the decision record.
 
 The visual CI job also renders font regression documents through LibreOffice using installed Liberation fonts. It verifies the fonts recorded in the PDF, then changes only the theme and checks that the rendered fonts follow it. To run the same check through installed Microsoft Word with Aptos and Aptos Display on Windows:
 

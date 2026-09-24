@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.2
+
+- Use ps-python-docx 1.3.1 public hyperlink authoring APIs. Remove the remaining production OOXML access.
+- Preserve link formatting, tooltips, linked images, and template hyperlink styles.
+- Enforce the public API boundary across all production modules.
+
 ## 0.3.1
 
 - Use ps-python-docx 1.3.0 public theme APIs. Remove theme-related OOXML access from production code.

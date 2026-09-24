@@ -57,6 +57,7 @@ def test_native_hyperlink_relationship_formatting_and_tooltip(tmp_path: Path) ->
     hyperlink = paragraph.hyperlinks[0]
     assert hyperlink.url == url
     assert hyperlink.text == "Café bold italic code"
+    assert hyperlink.tooltip == "Tips & details"
     assert len(paragraph.hyperlinks) == 1
     assert any(run.text == "bold" and run.bold for run in hyperlink.runs)
     assert any(run.text == "italic" and run.italic for run in hyperlink.runs)
