@@ -114,5 +114,13 @@ class UnsupportedFeatureError(MarkdownDocxError):
 
 
 class RenderError(MarkdownDocxError):
-    def __init__(self, code: str, message: str, *, details: dict[str, Any] | None = None) -> None:
-        super().__init__(code, message, exit_code=EXIT_RENDER, details=details)
+    def __init__(
+        self,
+        code: str,
+        message: str,
+        *,
+        details: dict[str, Any] | None = None,
+        line: int | None = None,
+        input_path: str | None = None,
+    ) -> None:
+        super().__init__(code, message, exit_code=EXIT_RENDER, details=details, line=line, input_path=input_path)

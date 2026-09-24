@@ -7,6 +7,7 @@ from zipfile import ZipFile
 import pytest
 from docx import Document
 from docx.enum.style import WD_STYLE_TYPE
+from lxml import etree
 
 from markdown_docx.errors import TemplateError
 from markdown_docx.parser import parse_document
@@ -78,7 +79,12 @@ def test_template_theme_and_numbering_parts_are_preserved(
     assert template.read_bytes() == before
     with ZipFile(template) as source, ZipFile(output) as rendered:
         assert rendered.read("word/theme/theme1.xml") == source.read("word/theme/theme1.xml")
-        assert rendered.read("word/numbering.xml") == source.read("word/numbering.xml")
+        original = etree.fromstring(source.read("word/numbering.xml"))
+        updated = etree.fromstring(rendered.read("word/numbering.xml"))
+        for element in original:
+            match = next(child for child in updated if child.tag == element.tag and child.attrib == element.attrib)
+            assert etree.tostring(element) == etree.tostring(match)
+        assert len(updated) == len(original) + 2
 
 
 def test_dotx_is_rejected(tmp_path: Path) -> None:

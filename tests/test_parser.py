@@ -187,12 +187,20 @@ def test_list_depth_uses_configured_style_count() -> None:
     assert excinfo.value.context.code == "list_depth_unsupported"
 
 
-def test_ordered_list_must_begin_with_one() -> None:
-    with pytest.raises(ParseError) as excinfo:
-        parse("3. three\n")
-    assert excinfo.value.context.code == "ordered_list_start_unsupported"
+@pytest.mark.parametrize("start", [0, 1, 3, 999999999])
+def test_ordered_list_preserves_start(start: int) -> None:
+    block = parse(f"{start}. item\n").blocks[0]
+    assert isinstance(block, ListParagraphBlock)
+    assert block.start == start
 
 
-def test_multi_paragraph_list_item_is_rejected() -> None:
-    with pytest.raises(UnsupportedFeatureError):
-        parse("- first\n\n  second paragraph\n")
+def test_multi_paragraph_items_preserve_list_and_item_identity() -> None:
+    blocks = parse(
+        "3. first\n\n   second paragraph\n\n   - nested\n\n   after nested\n\n4. next\n\nText\n\n1. new list\n"
+    ).blocks
+    items = [block for block in blocks if isinstance(block, ListParagraphBlock)]
+    assert [block.continuation for block in items] == [False, True, False, True, False, False]
+    assert items[0].list_id == items[1].list_id == items[3].list_id == items[4].list_id
+    assert items[0].item_id == items[1].item_id == items[3].item_id
+    assert items[0].item_id != items[4].item_id
+    assert len({items[0].list_id, items[2].list_id, items[5].list_id}) == 3

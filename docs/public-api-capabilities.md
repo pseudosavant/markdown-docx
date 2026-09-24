@@ -1,8 +1,8 @@
 # Public `python-docx` capability matrix
 
-`markdown-docx` pins `ps-python-docx` 1.3.2, which retains the `docx` import package. The executable probe is `tests/test_public_api_capabilities.py`.
+`markdown-docx` pins `ps-python-docx` 1.3.3, which retains the `docx` import package. The executable probe is `tests/test_public_api_capabilities.py`.
 
-| Capability | Public API in fork 1.3.2 | Current behavior |
+| Capability | Public API in fork 1.3.3 | Current behavior |
 | --- | --- | --- |
 | Open and save blank DOCX templates | Yes | Supported |
 | Enumerate and validate styles | Yes | Supported |
@@ -11,7 +11,8 @@
 | Add sections and set page geometry | Yes | Supported |
 | Add explicit page breaks | Yes | Supported |
 | Apply list paragraph styles | Yes | Supported within configured depth |
-| Preserve multiple Word paragraphs as one list item | No | Multi-paragraph list items are rejected |
+| Preserve multiple Word paragraphs as one list item | Yes | Uses `ListInstance.apply_continuation` |
+| Control independent lists, starts, and restarts | Yes | Uses `Document.add_list` and `ListInstance.apply` |
 | Create, align, and size tables | Yes | Supported |
 | Add inline pictures with preserved aspect ratio | Yes | Supported |
 | Align picture paragraphs | Yes | Supported |
@@ -28,7 +29,7 @@ The public theme API implements the requirement that explicit Markdown font over
 
 The public drawing API exposes read/write `InlineShape.description` and `InlineShape.title` properties. Markdown image labels become plain-text descriptions and optional image titles are preserved. Empty alt text stays empty without marking the image as decorative. Metadata belongs to each placed image. The library owns the drawing XML, and production code uses only its public properties.
 
-Word lists are paragraph numbering, not container objects. The public API can apply a list style to a paragraph, but it cannot attach an unnumbered continuation paragraph to the preceding list item or inspect the numbering definition that owns its indentation. Treating every source paragraph as a new numbered item or flattening paragraphs into line breaks would change the source meaning. Version 0.1.0 therefore rejects multi-paragraph list items instead of approximating them.
+Word represents lists with paragraph numbering. `Document.add_list` creates an independent sequence using template numbering. The converter keeps one handle per Markdown list and uses its first marker as the starting number. `ListInstance.apply_continuation` makes a separate Word paragraph unnumbered and preserves its text alignment. The fork copies numbering definitions for each sequence because Word can otherwise share counters across interleaved lists. Original template definitions are preserved. Markdown list identity, item boundaries, and nesting remain in converter models. No custom source directives are required.
 
 References:
 

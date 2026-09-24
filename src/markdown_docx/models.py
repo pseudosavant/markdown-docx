@@ -126,6 +126,10 @@ class ListParagraphBlock:
     fragments: list[InlineFragment]
     list_kind: ListKind
     depth: int
+    list_id: int
+    item_id: int
+    start: int
+    continuation: bool = False
 
 
 @dataclass(slots=True)

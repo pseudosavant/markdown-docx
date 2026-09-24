@@ -86,7 +86,7 @@ def test_syntax_and_template_inspection_modes() -> None:
     assert code == 0
     syntax = json.loads(stdout)
     assert syntax["format"] == "markdown-docx"
-    assert "multi-paragraph list items" in syntax["text"]
+    assert "continuation paragraphs" in syntax["text"]
     assert stderr == ""
 
     code, stdout, stderr = invoke(["--inspect-template", "--json"])

@@ -265,7 +265,7 @@ def _consume_blockquote(tokens: list[Token], index: int, input_path: str) -> tup
     index += 1
     while index < len(tokens) and tokens[index].type != "blockquote_close":
         if tokens[index].type != "paragraph_open":
-            _unsupported("Blockquotes may contain paragraphs only in 0.3.3.", tokens[index], input_path)
+            _unsupported("Blockquotes may contain paragraphs only in 0.3.4.", tokens[index], input_path)
         paragraph, index = _consume_paragraph(tokens, index, input_path)
         if any(fragment.kind == "image" for fragment in paragraph.fragments):
             _unsupported("Images nested in blockquotes are not supported.", opening, input_path)
@@ -295,20 +295,15 @@ def _consume_list(
             line=_token_line(opening),
             input_path=input_path,
         )
-    if ordered:
-        start = opening.attrGet("start")
-        if start is not None and int(start) != 1:
-            raise ParseError(
-                "ordered_list_start_unsupported",
-                "Ordered lists must begin with 1 in 0.3.3.",
-                line=_token_line(opening),
-                input_path=input_path,
-            )
+    raw_start = opening.attrGet("start")
+    start = int(raw_start) if ordered and raw_start is not None else 1
+    list_id = index
     closing_type = "ordered_list_close" if ordered else "bullet_list_close"
     blocks: list[ListParagraphBlock] = []
     index += 1
     while index < len(tokens) and tokens[index].type != closing_type:
         item_open = tokens[index]
+        item_id = index
         if item_open.type != "list_item_open":
             _structure_error(item_open, input_path)
         index += 1
@@ -316,10 +311,6 @@ def _consume_list(
         while index < len(tokens) and tokens[index].type != "list_item_close":
             token = tokens[index]
             if token.type == "paragraph_open":
-                if paragraph_seen:
-                    _unsupported(
-                        "Multi-paragraph list items are not supported by the public list-style API.", token, input_path
-                    )
                 paragraph, index = _consume_paragraph(tokens, index, input_path)
                 if is_task_item(paragraph.fragments):
                     _unsupported("Task list syntax is not supported.", token, input_path)
@@ -331,6 +322,10 @@ def _consume_list(
                         fragments=paragraph.fragments,
                         list_kind=kind,
                         depth=depth,
+                        list_id=list_id,
+                        item_id=item_id,
+                        start=start,
+                        continuation=paragraph_seen,
                     )
                 )
                 paragraph_seen = True

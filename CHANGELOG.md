@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.4
+
+- Preserve ordered-list starting numbers, including zero, through ps-python-docx 1.3.3 public APIs.
+- Give separate and nested Markdown lists independent native Word numbering sequences.
+- Support multiple paragraphs within list items. Continuation paragraphs stay unnumbered and align with item text.
+- Preserve template list formatting and report invalid numbering styles with source lines.
+
 ## 0.3.3
 
 - Embed Markdown image alt text as native Word image descriptions through ps-python-docx 1.3.2 public APIs.

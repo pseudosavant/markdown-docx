@@ -11,6 +11,7 @@ from docx.document import Document as DocumentObject
 from docx.enum.section import WD_ORIENT, WD_SECTION
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_BREAK
+from docx.numbering import ListInstance
 from docx.shared import Emu
 from docx.text.paragraph import Paragraph
 
@@ -61,6 +62,7 @@ def render_docx(
     image_loader = ImageLoader(base_dir, allow_remote=allow_remote_images)
     reusable = _reusable_initial_paragraph(document)
     warnings = list(model.warnings)
+    lists: dict[int, ListInstance] = {}
 
     try:
         for block in model.blocks:
@@ -113,6 +115,21 @@ def render_docx(
                     else model.options.styles.unordered_list
                 )
                 paragraph, reusable = _new_paragraph(document, style=styles[block.depth], reusable=reusable)
+                try:
+                    if block.list_id not in lists:
+                        lists[block.list_id] = document.add_list(styles[block.depth], start=block.start)
+                    sequence = lists[block.list_id]
+                    if block.continuation:
+                        sequence.apply_continuation(paragraph)
+                    else:
+                        sequence.apply(paragraph)
+                except (ValueError, KeyError) as exc:
+                    raise RenderError(
+                        "list_numbering_invalid",
+                        f"List style {styles[block.depth]!r} cannot provide numbering: {exc}",
+                        line=block.line,
+                        input_path=model.source_name,
+                    ) from exc
                 _render_fragments(
                     paragraph,
                     block.fragments,

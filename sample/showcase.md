@@ -174,6 +174,18 @@ print(target)
 
 <!-- markdown-docx: page-break -->
 
+## List starts and continuation paragraphs
+
+3. This ordered list begins at three.
+
+   This second paragraph belongs to the same item and has no number.
+
+4. This item continues at four.
+
+A paragraph separates the next list from the previous sequence.
+
+1. This independent list starts again at one.
+
 ## List kinds and depths
 
 - Unordered level one
