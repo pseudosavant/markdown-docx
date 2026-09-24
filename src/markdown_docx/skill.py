@@ -26,7 +26,7 @@ HASH_PATTERN = re.compile(r"sha256:[0-9a-f]{64}")
 
 _SKILL_TEMPLATE = """---
 name: markdown-docx
-description: Create editable Word documents from strict Markdown using `uvx markdown-docx`. Use for authoring, rendering, validating, or inspecting markdown-docx sources and blank DOCX formatting templates.
+description: Create editable Word documents from strict Markdown using `uvx markdown-docx`. Use for authoring, rendering, validating, or inspecting markdown-docx sources and blank DOCX or DOTX formatting templates.
 metadata:
   managed-by: markdown-docx
   managed-version: {managed_version}
@@ -50,7 +50,7 @@ uvx markdown-docx --list-styles --template formatting.docx
 uvx markdown-docx --list-table-styles --template formatting.docx
 ```
 
-Custom templates must be blank `.docx` files. They may contain styles, themes, fonts, numbering definitions, and page defaults. They may not contain body content, tables, drawings, or nonempty headers and footers.
+Custom templates must be blank, macro-free `.docx` or `.dotx` files. DOTX input creates a real DOCX output without changing the source. DOCM and DOTM formats are unsupported. They may contain styles, themes, fonts, numbering definitions, and page defaults. They may not contain body content, tables, drawings, or nonempty headers and footers.
 
 ## Render a document
 

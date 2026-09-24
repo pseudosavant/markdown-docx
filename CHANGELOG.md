@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.8
+
+- Accept blank macro-free DOTX templates for rendering, inspection, and style listing.
+- Produce valid DOCX packages through ps-python-docx 1.3.7 while preserving the source template.
+- Keep blank-template restrictions and reject macro-enabled formats.
+
 ## 0.3.7
 
 - Repeat pipe-table header rows automatically across pages through ps-python-docx 1.3.6.

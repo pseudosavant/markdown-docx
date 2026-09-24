@@ -100,6 +100,6 @@ def test_ps_python_docx_132_public_api_capability_matrix(tmp_path: Path) -> None
 
 
 def test_only_the_fork_distribution_provides_docx() -> None:
-    assert metadata.version("ps-python-docx") == "1.3.6"
+    assert metadata.version("ps-python-docx") == "1.3.7"
     with pytest.raises(metadata.PackageNotFoundError):
         metadata.distribution("python-docx")

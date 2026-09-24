@@ -87,9 +87,9 @@ def test_template_theme_and_numbering_parts_are_preserved(
         assert len(updated) == len(original) + 2
 
 
-def test_dotx_is_rejected(tmp_path: Path) -> None:
+def test_invalid_dotx_is_rejected(tmp_path: Path) -> None:
     path = tmp_path / "template.dotx"
     path.write_bytes(b"not a package")
     with pytest.raises(TemplateError) as excinfo:
         load_template(path)
-    assert excinfo.value.context.code == "unsupported_feature"
+    assert excinfo.value.context.code == "template_invalid"

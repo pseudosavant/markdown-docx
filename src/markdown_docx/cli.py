@@ -43,7 +43,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("output", nargs="?", help="Optional output .docx path.")
     parser.add_argument("--input", dest="input_flag", help="Input Markdown path, or '-' for stdin.")
     parser.add_argument("--output", dest="output_flag", help="Output .docx path.")
-    parser.add_argument("--template", help="Blank DOCX formatting template.")
+    parser.add_argument("--template", help="Blank DOCX or DOTX formatting template.")
     parser.add_argument("--base-dir", help="Resolve stdin image paths from this directory.")
     parser.add_argument("--force", action="store_true", help="Overwrite an existing generated DOCX.")
     parser.add_argument("--no-remote-images", action="store_true", help="Reject HTTP and HTTPS images.")
@@ -84,7 +84,7 @@ Agent skill:
 
 Common options:
   -h, --help              Show this quick reference.
-  --template PATH         Use a blank DOCX formatting template.
+  --template PATH         Use a blank DOCX or DOTX formatting template.
   --base-dir PATH         Resolve relative stdin assets from PATH.
   --force                 Overwrite an existing generated DOCX.
   --no-remote-images      Reject HTTP and HTTPS images.

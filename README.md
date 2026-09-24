@@ -104,7 +104,7 @@ If no `--template` is provided, the packaged blank template supplies the default
 
 A custom template lets an organization control styles, theme data, fonts, numbering definitions, and section defaults while the Markdown remains focused on content. Inspect a template before writing the document, then use only the styles it provides.
 
-The template must be a blank `.docx` formatting template. `.dotx` is not supported. Inspect it before writing Markdown that refers to its style names:
+The template must be a blank, macro-free `.docx` or `.dotx` formatting template. DOTX input produces a real DOCX output and leaves the source template unchanged. Macro-enabled DOCM and DOTM files are unsupported. Populated headers and footers remain unsupported. Inspect it before writing Markdown that refers to its style names:
 
 ```powershell
 uvx markdown-docx --inspect-template --template formatting.docx
@@ -471,9 +471,9 @@ uvx --refresh --from . markdown-docx sample\showcase.md sample\showcase.docx --f
 
 ## Design and compatibility
 
-Both development installs and published wheels use `ps-python-docx==1.3.6` from PyPI. It retains the `docx` import package and replaces the upstream `python-docx` distribution. Use `uv sync --locked --all-groups` and `uv run markdown-docx` when working from source. CI and the release workflow test a clean wheel installation from PyPI.
+Both development installs and published wheels use `ps-python-docx==1.3.7` from PyPI. It retains the `docx` import package and replaces the upstream `python-docx` distribution. Use `uv sync --locked --all-groups` and `uv run markdown-docx` when working from source. CI and the release workflow test a clean wheel installation from PyPI.
 
-Production code uses only the public `docx` APIs provided by `ps-python-docx` 1.3.6. Native hyperlinks, image descriptions and titles, theme fonts, style references, linked styles, and document defaults use public library APIs. `src/markdown_docx/hyperlinks.py` applies Markdown styling through the public hyperlink API. Tests enforce the public API boundary and inspect saved image metadata, hyperlinks, theme data, style inheritance, and effective font selection. See [public API capabilities](docs/public-api-capabilities.md) for the decision record.
+Production code uses only the public `docx` APIs provided by `ps-python-docx` 1.3.7. Native hyperlinks, image descriptions and titles, theme fonts, style references, linked styles, and document defaults use public library APIs. `src/markdown_docx/hyperlinks.py` applies Markdown styling through the public hyperlink API. Tests enforce the public API boundary and inspect saved image metadata, hyperlinks, theme data, style inheritance, and effective font selection. See [public API capabilities](docs/public-api-capabilities.md) for the decision record.
 
 The visual CI job also renders font regression documents through LibreOffice using installed Liberation fonts. It verifies the fonts recorded in the PDF, then changes only the theme and checks that the rendered fonts follow it. To run the same check through installed Microsoft Word with Aptos and Aptos Display on Windows:
 

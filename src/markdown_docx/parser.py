@@ -287,7 +287,7 @@ def _consume_blockquote(tokens: list[Token], index: int, input_path: str) -> tup
     index += 1
     while index < len(tokens) and tokens[index].type != "blockquote_close":
         if tokens[index].type != "paragraph_open":
-            _unsupported("Blockquotes may contain paragraphs only in 0.3.7.", tokens[index], input_path)
+            _unsupported("Blockquotes may contain paragraphs only in 0.3.8.", tokens[index], input_path)
         paragraph, index = _consume_paragraph(tokens, index, input_path)
         if any(fragment.kind == "image" for fragment in paragraph.fragments):
             _unsupported("Images nested in blockquotes are not supported.", opening, input_path)

@@ -27,17 +27,21 @@ def load_template(path: Path | None) -> DocumentObject:
         document = Document(BytesIO(default_template_bytes()))
         validate_blank_template(document, label="packaged default template")
         return document
+    document = _open_template(path)
+    validate_blank_template(document, label=str(path.resolve()))
+    return document
+
+
+def _open_template(path: Path) -> DocumentObject:
     resolved = path.resolve()
     if not resolved.is_file():
         raise TemplateError("template_not_found", f"Template does not exist: {resolved}")
-    if resolved.suffix.lower() != ".docx":
-        raise TemplateError("unsupported_feature", "Templates must use the .docx format. DOTX is not supported.")
+    if resolved.suffix.lower() not in {".docx", ".dotx"}:
+        raise TemplateError("unsupported_feature", "Templates must use macro-free .docx or .dotx format.")
     try:
-        document = Document(str(resolved))
+        return Document(str(resolved))
     except (PackageNotFoundError, ValueError) as exc:
-        raise TemplateError("template_invalid", f"Template is not a readable DOCX file: {resolved}") from exc
-    validate_blank_template(document, label=str(resolved))
-    return document
+        raise TemplateError("template_invalid", f"Template is not a readable DOCX or DOTX file: {resolved}") from exc
 
 
 def validate_blank_template(document: DocumentObject, *, label: str) -> None:
@@ -72,12 +76,7 @@ def inspect_template(path: Path | None) -> dict[str, Any]:
     else:
         resolved = path.resolve()
         label = str(resolved)
-        if not resolved.is_file():
-            raise TemplateError("template_not_found", f"Template does not exist: {resolved}")
-        try:
-            document = Document(str(resolved))
-        except (PackageNotFoundError, ValueError) as exc:
-            raise TemplateError("template_invalid", f"Template is not a readable DOCX file: {resolved}") from exc
+        document = _open_template(resolved)
     errors = blank_template_errors(document)
     groups = {
         "paragraph": sorted(style.name for style in document.styles if style.type == WD_STYLE_TYPE.PARAGRAPH),

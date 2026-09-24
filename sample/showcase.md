@@ -340,3 +340,7 @@ Pipe-table headers repeat automatically when their table spans pages. Body rows 
 | --- | --- |
 | Header row | Repeats on later table pages |
 | Body row | Appears once |
+
+## DOTX formatting templates
+
+The same Markdown can use a blank macro-free `.dotx` file through `--template`. Output remains an editable `.docx`, and the source template stays unchanged.

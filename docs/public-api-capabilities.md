@@ -1,10 +1,10 @@
 # Public `python-docx` capability matrix
 
-`markdown-docx` pins `ps-python-docx` 1.3.6, which retains the `docx` import package. The executable probe is `tests/test_public_api_capabilities.py`.
+`markdown-docx` pins `ps-python-docx` 1.3.7, which retains the `docx` import package. The executable probe is `tests/test_public_api_capabilities.py`.
 
-| Capability | Public API in fork 1.3.6 | Current behavior |
+| Capability | Public API in fork 1.3.7 | Current behavior |
 | --- | --- | --- |
-| Open and save blank DOCX templates | Yes | Supported |
+| Open blank DOCX or DOTX templates and save DOCX | Yes | Uses `Document(path)` |
 | Enumerate and validate styles | Yes | Supported |
 | Change paragraph style fonts | Yes | Supported |
 | Set document theme fonts and theme inheritance | Yes | Uses `Document.theme_fonts`, `Font.theme_font`, `Styles.default_font`, and `Style.linked_style` |
@@ -14,6 +14,8 @@
 | Preserve multiple Word paragraphs as one list item | Yes | Uses `ListInstance.apply_continuation` |
 | Control independent lists, starts, and restarts | Yes | Uses `Document.add_list` and `ListInstance.apply` |
 | Create, align, and size tables | Yes | Supported |
+| Repeat leading table headers | Yes | Uses `row.repeat_as_header` |
+| Create native editable footnotes | Yes | Uses `Document.add_footnote` and `Document.footnotes` |
 | Add inline pictures with preserved aspect ratio | Yes | Supported |
 | Align picture paragraphs | Yes | Supported |
 | Create and find bookmarks | Yes | Uses `Document.bookmarks` |
@@ -32,15 +34,15 @@ The public drawing API exposes read/write `InlineShape.description` and `InlineS
 
 Word represents lists with paragraph numbering. `Document.add_list` creates an independent sequence using template numbering. The converter keeps one handle per Markdown list and uses its first marker as the starting number. `ListInstance.apply_continuation` makes a separate Word paragraph unnumbered and preserves its text alignment. The fork copies numbering definitions for each sequence because Word can otherwise share counters across interleaved lists. Original template definitions are preserved. Markdown list identity, item boundaries, and nesting remain in converter models. No custom source directives are required.
 
+Native footnotes use `Document.add_footnote`, `Document.footnotes`, and `Run.footnote_ids`. Note paragraphs and hyperlinks use public story APIs. The converter performs no XML writes for note creation.
+
+Pipe-table headers use the public `row.repeat_as_header` property. Body rows retain their defaults.
+
+DOTX input uses `Document(path)` to instantiate a DOCX package through the public factory. The converter retains blank-template validation and rejects macro-enabled formats.
+
 References:
 
 - https://python-docx.readthedocs.io/en/latest/api/text.html
 - https://python-docx.readthedocs.io/en/latest/api/dml.html
 - https://python-docx.readthedocs.io/en/latest/api/document.html
 - https://python-docx.readthedocs.io/en/latest/api/table.html
-
-Native footnotes use `Document.add_footnote`, `Document.footnotes`, and `Run.footnote_ids`. Note paragraphs and hyperlinks use public story APIs. The converter performs no XML writes for note creation.
-
-Native footnotes use `Document.add_footnote`, `Document.footnotes`, and `Run.footnote_ids`. Note paragraphs and hyperlinks use public story APIs. The converter performs no XML writes for note creation.
-
-Pipe-table headers use the public `row.repeat_as_header` property. Body rows retain their defaults.
