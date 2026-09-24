@@ -5,7 +5,7 @@ import tempfile
 from hashlib import sha256
 from io import BytesIO
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from docx import Document
 from docx.document import Document as DocumentObject
@@ -13,7 +13,8 @@ from docx.enum.section import WD_ORIENT, WD_SECTION
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_BREAK
 from docx.numbering import ListInstance
-from docx.shared import Emu
+from docx.shared import Emu, Inches
+from docx.styles.style import ParagraphStyle
 from docx.text.paragraph import Paragraph
 
 from markdown_docx.errors import MarkdownDocxError, RenderError
@@ -63,10 +64,13 @@ def render_docx(
     current_settings = model.options.section
     _apply_section_settings(document.sections[0], current_settings)
     image_loader = ImageLoader(base_dir, allow_remote=allow_remote_images)
+    quote_style = cast(ParagraphStyle, document.styles[model.options.styles.blockquote])
+    style_indent = quote_style.paragraph_format.left_indent
+    quote_step = int(style_indent if style_indent is not None else Inches(0.5))
     reusable = _reusable_initial_paragraph(document)
     warnings = list(model.warnings)
     lists: dict[int, ListInstance] = {}
-    list_items: dict[int, Paragraph] = {}
+    list_item_indents: dict[int, int] = {}
     bookmarks: dict[str, str] = {}
     reserved_names = {bookmark.name.casefold() for bookmark in document.bookmarks}
     for block in model.blocks:
@@ -97,6 +101,7 @@ def render_docx(
                     reusable=reusable,
                 )
                 document.bookmarks.add(bookmarks[block.anchor], paragraph=paragraph)
+                _apply_quote_indent(paragraph, block.quote_depth, quote_step, _style_left_indent(paragraph))
                 _render_fragments(
                     paragraph,
                     block.fragments,
@@ -114,6 +119,7 @@ def render_docx(
                     model.options.styles.blockquote if block.role == "blockquote" else model.options.styles.paragraph
                 )
                 paragraph, reusable = _new_paragraph(document, style=style, reusable=reusable)
+                _apply_quote_indent(paragraph, block.quote_depth, quote_step, 0)
                 _render_fragments(
                     paragraph,
                     block.fragments,
@@ -133,6 +139,7 @@ def render_docx(
                     reusable=reusable,
                 )
                 paragraph.add_run(block.text.rstrip("\n"))
+                _apply_quote_indent(paragraph, block.quote_depth, quote_step, _style_left_indent(paragraph))
             elif isinstance(block, ListParagraphBlock):
                 styles = (
                     model.options.styles.ordered_list
@@ -148,6 +155,10 @@ def render_docx(
                         sequence.apply_continuation(paragraph)
                     else:
                         sequence.apply(paragraph)
+                    indent = sequence.continuation_left_indent(paragraph)
+                    list_item_indents.setdefault(block.item_id, int(indent or 0))
+                    if block.quote_depth:
+                        _apply_quote_indent(paragraph, block.quote_depth, quote_step, int(indent or 0))
                 except (ValueError, KeyError) as exc:
                     raise RenderError(
                         "list_numbering_invalid",
@@ -155,7 +166,6 @@ def render_docx(
                         line=block.line,
                         input_path=model.source_name,
                     ) from exc
-                list_items.setdefault(block.item_id, paragraph)
                 _render_fragments(
                     paragraph,
                     block.fragments,
@@ -173,11 +183,12 @@ def render_docx(
                     document,
                     block,
                     sequence=lists[block.list_id],
-                    item_paragraph=list_items[block.item_id],
+                    item_indent=list_item_indents[block.item_id],
                     model=model,
                     settings=current_settings,
                     image_loader=image_loader,
                     bookmarks=bookmarks,
+                    quote_step=quote_step,
                 )
             elif isinstance(block, TableBlock):
                 _render_table(
@@ -187,6 +198,7 @@ def render_docx(
                     settings=current_settings,
                     image_loader=image_loader,
                     bookmarks=bookmarks,
+                    left_indent=quote_step * block.quote_depth if block.quote_depth else None,
                 )
             elif isinstance(block, ImageBlock):
                 paragraph, reusable = _new_paragraph(
@@ -195,11 +207,12 @@ def render_docx(
                     reusable=reusable,
                 )
                 paragraph.alignment = PARAGRAPH_ALIGNMENT[block.options.alignment]
+                _apply_quote_indent(paragraph, block.quote_depth, quote_step, _style_left_indent(paragraph))
                 asset = image_loader.load(block.src, line=block.line, input_path=model.source_name)
                 width = rendered_width(
                     asset,
                     block.options,
-                    usable_width=current_settings.usable_width,
+                    usable_width=current_settings.usable_width - quote_step * block.quote_depth,
                     line=block.line,
                     input_path=model.source_name,
                 )
@@ -325,20 +338,32 @@ def _render_fragments(
                 run.font.name = monospace
 
 
+def _style_left_indent(paragraph: Paragraph) -> int:
+    style = cast(ParagraphStyle, paragraph.style)
+    value = style.paragraph_format.left_indent
+    return int(value) if value is not None else 0
+
+
+def _apply_quote_indent(paragraph: Paragraph, depth: int, step: int, base: int) -> None:
+    if depth:
+        paragraph.paragraph_format.left_indent = Emu(base + step * depth)
+
+
 def _render_list_content(
     document: DocumentObject,
     block: ListContentBlock,
     *,
     sequence: ListInstance,
-    item_paragraph: Paragraph,
+    item_indent: int,
     model: DocumentModel,
     settings: SectionSettings,
     image_loader: ImageLoader,
     bookmarks: dict[str, str],
+    quote_step: int,
 ) -> None:
     content = block.content
     if isinstance(content, TableBlock):
-        indent = sequence.continuation_left_indent(item_paragraph)
+        indent = item_indent + quote_step * block.quote_depth
         _render_table(
             document,
             content,
@@ -346,7 +371,7 @@ def _render_list_content(
             settings=settings,
             image_loader=image_loader,
             bookmarks=bookmarks,
-            left_indent=int(indent) if indent is not None else None,
+            left_indent=indent or None,
         )
         return
     if isinstance(content, ParagraphBlock):
@@ -359,14 +384,14 @@ def _render_list_content(
         style = model.options.styles.paragraph
     paragraph = document.add_paragraph(style=style)
     sequence.apply_continuation(paragraph)
+    _apply_quote_indent(paragraph, block.quote_depth, quote_step, item_indent)
     if isinstance(content, HeadingBlock):
         document.bookmarks.add(bookmarks[content.anchor], paragraph=paragraph)
     if isinstance(content, CodeBlock):
         paragraph.add_run(content.text.rstrip("\n"))
     elif isinstance(content, ImageBlock):
         asset = image_loader.load(content.src, line=content.line, input_path=model.source_name)
-        indent = sequence.continuation_left_indent(item_paragraph)
-        usable_width = settings.usable_width - (int(indent) if indent is not None else 0)
+        usable_width = settings.usable_width - item_indent - quote_step * block.quote_depth
         width = rendered_width(
             asset,
             content.options,

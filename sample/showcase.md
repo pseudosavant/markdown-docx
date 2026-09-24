@@ -169,6 +169,22 @@ Setext headings create the same Word heading and bookmark as hash headings.
 >
 > A second quoted paragraph confirms that consecutive quote blocks remain editable text.
 
+> ### A heading inside a quote
+>
+> - A list item keeps native bullets inside the quote.
+>
+> ```text
+> Quoted code stays editable.
+> ```
+>
+> | Quoted part | Status |
+> | --- | --- |
+> | Table | Ready |
+>
+> ![Three dogs in a quoted illustration](assets/dog-trio-inline.png)
+>
+> > A second quote level adds another indent.
+
 ## Fenced code
 
 ```python

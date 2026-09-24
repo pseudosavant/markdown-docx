@@ -345,7 +345,7 @@ The current release supports:
 - Emphasis, strong emphasis, strikethrough, superscript, subscript, and inline backtick code
 - Markdown links with formatted labels and optional titles, plus bare URL links
 - Fenced and indented code blocks
-- Blockquotes containing paragraphs
+- Blockquotes containing paragraphs, headings, lists, code blocks, tables, images, and nested quotes
 - Ordered and unordered lists, including mixed nesting and rich item content
 - Pipe tables with inline text formatting
 - Local and remote inline images
@@ -356,7 +356,7 @@ The following syntax is intentionally unsupported:
 - Raw HTML and non-reserved HTML comments
 - Horizontal rules
 - Task lists
-- Images inside table cells or blockquotes
+- Images inside table cells
 - Arbitrary Markdown extensions
 
 Links such as `[link text](https://example.com)` and bare URLs become native, clickable, editable Word hyperlinks. Labels preserve bold, italic, strikethrough, superscript, subscript, inline code, and line breaks. Optional Markdown titles become Word tooltips. Links work in paragraphs, headings, blockquotes, lists, and table cells. Reference links, angle-bracket autolinks, email links, relative file links, and linked inline images are supported wherever their content is allowed. Destinations are stored without fetching them. Relative file links are resolved by Word relative to the output document. Empty destinations are rejected. Every heading creates a bookmark. Link to its slug with `[Details](#details)`, including before the heading. Slugs use plain heading text and image labels, normalized to NFC and lowercase. Punctuation is removed except underscores and hyphens. Whitespace becomes a hyphen. Empty slugs use `section`. Duplicates receive `-1`, `-2`, and later available suffixes in document order. Unicode and percent-encoded fragments are supported. Fragments must match the slug exactly. Missing targets produce `internal_link_unresolved` with the source line. Word bookmark names are generated separately to fit Word constraints.
@@ -364,6 +364,8 @@ Links such as `[link text](https://example.com)` and bare URLs become native, cl
 Use `~~deleted~~` for strikethrough, `x^2^` for superscript, and `H~2~O` for subscript. Setext headings use `===` for level one and `---` for level two on the next line. Indent code by four spaces to create a code block.
 
 List items can contain paragraphs, headings, code blocks, blockquotes, tables, and images. Indent each nested block under its list item. Only the first item paragraph receives a number or bullet. Later paragraphs and blocks align with its text. A table in a list item keeps that indentation through the public ps-python-docx APIs.
+
+Blockquotes can contain the same editable block content and can nest using additional `>` markers. Heading bookmarks and list numbering work within quotes. The configured Quote paragraph style controls quoted paragraphs, while other nested blocks retain their own styles and gain the quote indentation.
 
 ```markdown
 Read the [**project documentation**](https://example.com/docs "Read the guide").

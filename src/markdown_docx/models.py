@@ -111,6 +111,7 @@ class ParagraphBlock:
     line: int
     fragments: list[InlineFragment]
     role: Literal["paragraph", "blockquote"] = "paragraph"
+    quote_depth: int = 0
 
 
 @dataclass(slots=True)
@@ -119,12 +120,14 @@ class HeadingBlock:
     level: int
     fragments: list[InlineFragment]
     anchor: str = ""
+    quote_depth: int = 0
 
 
 @dataclass(slots=True)
 class CodeBlock:
     line: int
     text: str
+    quote_depth: int = 0
 
 
 @dataclass(slots=True)
@@ -137,6 +140,7 @@ class ListParagraphBlock:
     item_id: int
     start: int
     continuation: bool = False
+    quote_depth: int = 0
 
 
 @dataclass(slots=True)
@@ -151,6 +155,7 @@ class TableBlock:
     headers: list[TableCell]
     rows: list[list[TableCell]]
     options: TableOptions
+    quote_depth: int = 0
 
 
 @dataclass(slots=True)
@@ -160,6 +165,7 @@ class ImageBlock:
     alt: str
     options: ImageOptions
     title: str | None = None
+    quote_depth: int = 0
 
 
 @dataclass(slots=True)
@@ -183,6 +189,7 @@ class ListContentBlock:
     list_id: int
     item_id: int
     depth: int
+    quote_depth: int = 0
 
 
 Block: TypeAlias = (

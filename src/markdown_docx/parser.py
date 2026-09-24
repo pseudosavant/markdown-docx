@@ -183,7 +183,9 @@ def parse_document(
             blocks.append(CodeBlock(line=line, text=token.content))
             index += 1
         elif token_type == "blockquote_open":
-            quote_blocks, index = _consume_blockquote(tokens, index, input_label)
+            quote_blocks, index = _consume_blockquote(
+                tokens, index, options=options, input_path=input_label, list_depth=0
+            )
             blocks.extend(quote_blocks)
         elif token_type in {"bullet_list_open", "ordered_list_open"}:
             list_blocks, index = _consume_list(tokens, index, depth=0, options=options, input_path=input_label)
@@ -286,20 +288,60 @@ def _consume_heading(tokens: list[Token], index: int, input_path: str) -> tuple[
     return HeadingBlock(line=line, level=level, fragments=fragments), index + 3
 
 
-def _consume_blockquote(tokens: list[Token], index: int, input_path: str) -> tuple[list[ParagraphBlock], int]:
+def _consume_blockquote(
+    tokens: list[Token],
+    index: int,
+    *,
+    options: DocumentOptions,
+    input_path: str,
+    list_depth: int,
+) -> tuple[list[Block], int]:
     opening = tokens[index]
-    blocks: list[ParagraphBlock] = []
+    blocks: list[Block] = []
     index += 1
     while index < len(tokens) and tokens[index].type != "blockquote_close":
-        if tokens[index].type != "paragraph_open":
-            _unsupported("Blockquotes may contain paragraphs only in 0.3.8.", tokens[index], input_path)
-        paragraph, index = _consume_paragraph(tokens, index, input_path)
-        if any(fragment.kind == "image" for fragment in paragraph.fragments):
-            _unsupported("Images nested in blockquotes are not supported.", opening, input_path)
-        paragraph.role = "blockquote"
-        blocks.append(paragraph)
+        token = tokens[index]
+        if token.type == "paragraph_open":
+            paragraph, index = _consume_paragraph(tokens, index, input_path)
+            if is_standalone_image(paragraph.fragments):
+                image = next(fragment for fragment in paragraph.fragments if fragment.kind == "image")
+                blocks.append(
+                    ImageBlock(
+                        line=paragraph.line,
+                        src=image.src or "",
+                        alt=image.alt or "",
+                        title=image.title,
+                        options=ImageOptions(),
+                    )
+                )
+            else:
+                paragraph.role = "blockquote"
+                blocks.append(paragraph)
+        elif token.type == "heading_open":
+            heading, index = _consume_heading(tokens, index, input_path)
+            blocks.append(heading)
+        elif token.type in {"fence", "code_block"}:
+            blocks.append(CodeBlock(line=_token_line(token), text=token.content))
+            index += 1
+        elif token.type in {"bullet_list_open", "ordered_list_open"}:
+            list_blocks, index = _consume_list(tokens, index, depth=list_depth, options=options, input_path=input_path)
+            blocks.extend(list_blocks)
+        elif token.type == "table_open":
+            table, index = _consume_table(tokens, index, TableOptions(), input_path)
+            blocks.append(table)
+        elif token.type == "blockquote_open":
+            nested, index = _consume_blockquote(
+                tokens, index, options=options, input_path=input_path, list_depth=list_depth
+            )
+            blocks.extend(nested)
+        else:
+            _unsupported("This content type is not supported in a blockquote.", token, input_path)
     if index >= len(tokens):
         _structure_error(opening, input_path)
+    for block in blocks:
+        if isinstance(block, (PageBreakBlock, SectionBreakBlock)):
+            _structure_error(opening, input_path)
+        block.quote_depth += 1
     return blocks, index + 1
 
 
@@ -368,7 +410,7 @@ def _consume_list(
                     )
                 )
                 paragraph_seen = True
-            elif token.type in {"fence", "code_block", "heading_open", "table_open", "blockquote_open"}:
+            elif token.type in {"fence", "code_block", "heading_open", "table_open"}:
                 if token.type in {"fence", "code_block"}:
                     code_content = CodeBlock(line=_token_line(token), text=token.content)
                     index += 1
@@ -379,13 +421,28 @@ def _consume_list(
                 elif token.type == "table_open":
                     table_content, index = _consume_table(tokens, index, TableOptions(), input_path)
                     nested_blocks = [table_content]
-                else:
-                    quote_blocks, index = _consume_blockquote(tokens, index, input_path)
-                    nested_blocks = [*quote_blocks]
                 if not paragraph_seen:
                     blocks.append(_empty_list_item(_token_line(token), kind, depth, list_id, item_id, start))
                     paragraph_seen = True
                 blocks.extend(ListContentBlock(block.line, block, list_id, item_id, depth) for block in nested_blocks)
+            elif token.type == "blockquote_open":
+                quote_blocks, index = _consume_blockquote(
+                    tokens, index, options=options, input_path=input_path, list_depth=depth + 1
+                )
+                if not paragraph_seen:
+                    blocks.append(_empty_list_item(_token_line(token), kind, depth, list_id, item_id, start))
+                    paragraph_seen = True
+                for quoted in quote_blocks:
+                    if isinstance(quoted, (ListParagraphBlock, ListContentBlock)):
+                        blocks.append(quoted)
+                    else:
+                        if not isinstance(quoted, (ParagraphBlock, HeadingBlock, CodeBlock, TableBlock, ImageBlock)):
+                            _structure_error(token, input_path)
+                        blocks.append(
+                            ListContentBlock(
+                                quoted.line, quoted, list_id, item_id, depth, quote_depth=quoted.quote_depth
+                            )
+                        )
             elif token.type in {"bullet_list_open", "ordered_list_open"}:
                 nested, index = _consume_list(tokens, index, depth=depth + 1, options=options, input_path=input_path)
                 blocks.extend(nested)

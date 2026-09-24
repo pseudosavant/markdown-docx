@@ -79,6 +79,10 @@ def test_showcase_covers_portable_markdown_and_metadata_features() -> None:
         fragment.kind == "link_open" and fragment.href == "https://example.com/docs" for fragment in text_fragments
     )
     assert any(heading.anchor == "setext-heading-level-two" for heading in headings)
+    assert any(heading.anchor == "a-heading-inside-a-quote" and heading.quote_depth == 1 for heading in headings)
+    assert any(isinstance(block, ParagraphBlock) and block.quote_depth == 2 for block in model.blocks)
+    assert any(isinstance(block, TableBlock) and block.quote_depth == 1 for block in model.blocks)
+    assert any(isinstance(block, ImageBlock) and block.quote_depth == 1 for block in model.blocks)
     assert any(isinstance(block, CodeBlock) and 'source = "showcase.md"' in block.text for block in model.blocks)
     assert any(
         "source line and continues through a soft source break" in (fragment.text or "") for fragment in text_fragments
@@ -148,9 +152,9 @@ def test_showcase_renders_as_editable_native_word_content(tmp_path: Path) -> Non
     assert result["sections"] == 5
     assert result["warnings"] == []
     assert len(document.sections) == 5
-    assert len(document.tables) == 6
+    assert len(document.tables) == 7
     assert all(table.rows[0].repeat_as_header is True for table in document.tables)
-    assert len(document.inline_shapes) == 9
+    assert len(document.inline_shapes) == 10
     assert all(shape.description for shape in document.inline_shapes)
     assert document.inline_shapes[0].title == "The park run begins"
     assert any(paragraph.text == "The Great Lunch Bag Chase" for paragraph in document.paragraphs)
