@@ -8,6 +8,7 @@ from markdown_docx.models import (
     CodeBlock,
     HeadingBlock,
     ImageBlock,
+    ListContentBlock,
     ListParagraphBlock,
     PageBreakBlock,
     ParagraphBlock,
@@ -47,6 +48,7 @@ def test_showcase_covers_portable_markdown_and_metadata_features() -> None:
         CodeBlock,
         HeadingBlock,
         ImageBlock,
+        ListContentBlock,
         ListParagraphBlock,
         PageBreakBlock,
         ParagraphBlock,
@@ -83,6 +85,12 @@ def test_showcase_covers_portable_markdown_and_metadata_features() -> None:
     )
 
     list_blocks = [block for block in model.blocks if isinstance(block, ListParagraphBlock)]
+    assert {type(block.content) for block in model.blocks if isinstance(block, ListContentBlock)} >= {
+        CodeBlock,
+        ParagraphBlock,
+        TableBlock,
+        ImageBlock,
+    }
     assert {(block.list_kind, block.depth) for block in list_blocks} == {
         ("ordered", 0),
         ("ordered", 1),
@@ -140,9 +148,9 @@ def test_showcase_renders_as_editable_native_word_content(tmp_path: Path) -> Non
     assert result["sections"] == 5
     assert result["warnings"] == []
     assert len(document.sections) == 5
-    assert len(document.tables) == 5
+    assert len(document.tables) == 6
     assert all(table.rows[0].repeat_as_header is True for table in document.tables)
-    assert len(document.inline_shapes) == 8
+    assert len(document.inline_shapes) == 9
     assert all(shape.description for shape in document.inline_shapes)
     assert document.inline_shapes[0].title == "The park run begins"
     assert any(paragraph.text == "The Great Lunch Bag Chase" for paragraph in document.paragraphs)

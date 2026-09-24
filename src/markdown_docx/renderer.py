@@ -26,6 +26,7 @@ from markdown_docx.models import (
     HeadingBlock,
     ImageBlock,
     InlineFragment,
+    ListContentBlock,
     ListParagraphBlock,
     PageBreakBlock,
     ParagraphBlock,
@@ -65,9 +66,13 @@ def render_docx(
     reusable = _reusable_initial_paragraph(document)
     warnings = list(model.warnings)
     lists: dict[int, ListInstance] = {}
+    list_items: dict[int, Paragraph] = {}
     bookmarks: dict[str, str] = {}
     reserved_names = {bookmark.name.casefold() for bookmark in document.bookmarks}
-    for heading in (block for block in model.blocks if isinstance(block, HeadingBlock)):
+    for block in model.blocks:
+        heading = block.content if isinstance(block, ListContentBlock) else block
+        if not isinstance(heading, HeadingBlock):
+            continue
         base = "md_" + sha256(heading.anchor.encode("utf-8")).hexdigest()[:28]
         name = base
         suffix = 0
@@ -150,6 +155,7 @@ def render_docx(
                         line=block.line,
                         input_path=model.source_name,
                     ) from exc
+                list_items.setdefault(block.item_id, paragraph)
                 _render_fragments(
                     paragraph,
                     block.fragments,
@@ -161,6 +167,17 @@ def render_docx(
                     monospace=model.options.fonts.monospace,
                     line=block.line,
                     input_path=model.source_name,
+                )
+            elif isinstance(block, ListContentBlock):
+                _render_list_content(
+                    document,
+                    block,
+                    sequence=lists[block.list_id],
+                    item_paragraph=list_items[block.item_id],
+                    model=model,
+                    settings=current_settings,
+                    image_loader=image_loader,
+                    bookmarks=bookmarks,
                 )
             elif isinstance(block, TableBlock):
                 _render_table(
@@ -308,6 +325,73 @@ def _render_fragments(
                 run.font.name = monospace
 
 
+def _render_list_content(
+    document: DocumentObject,
+    block: ListContentBlock,
+    *,
+    sequence: ListInstance,
+    item_paragraph: Paragraph,
+    model: DocumentModel,
+    settings: SectionSettings,
+    image_loader: ImageLoader,
+    bookmarks: dict[str, str],
+) -> None:
+    content = block.content
+    if isinstance(content, TableBlock):
+        indent = sequence.continuation_left_indent(item_paragraph)
+        _render_table(
+            document,
+            content,
+            model=model,
+            settings=settings,
+            image_loader=image_loader,
+            bookmarks=bookmarks,
+            left_indent=int(indent) if indent is not None else None,
+        )
+        return
+    if isinstance(content, ParagraphBlock):
+        style = model.options.styles.blockquote if content.role == "blockquote" else model.options.styles.paragraph
+    elif isinstance(content, HeadingBlock):
+        style = model.options.styles.headings[content.level]
+    elif isinstance(content, CodeBlock):
+        style = model.options.styles.code_block
+    else:
+        style = model.options.styles.paragraph
+    paragraph = document.add_paragraph(style=style)
+    sequence.apply_continuation(paragraph)
+    if isinstance(content, HeadingBlock):
+        document.bookmarks.add(bookmarks[content.anchor], paragraph=paragraph)
+    if isinstance(content, CodeBlock):
+        paragraph.add_run(content.text.rstrip("\n"))
+    elif isinstance(content, ImageBlock):
+        asset = image_loader.load(content.src, line=content.line, input_path=model.source_name)
+        indent = sequence.continuation_left_indent(item_paragraph)
+        usable_width = settings.usable_width - (int(indent) if indent is not None else 0)
+        width = rendered_width(
+            asset,
+            content.options,
+            usable_width=usable_width,
+            line=content.line,
+            input_path=model.source_name,
+        )
+        picture = paragraph.add_run().add_picture(BytesIO(asset.data), width=Emu(width))
+        picture.description = content.alt
+        picture.title = content.title
+    else:
+        _render_fragments(
+            paragraph,
+            content.fragments,
+            document=document,
+            footnotes=model.footnotes,
+            image_loader=image_loader,
+            bookmarks=bookmarks,
+            settings=settings,
+            monospace=model.options.fonts.monospace,
+            line=content.line,
+            input_path=model.source_name,
+        )
+
+
 def _render_table(
     document: DocumentObject,
     block: TableBlock,
@@ -316,6 +400,7 @@ def _render_table(
     settings: SectionSettings,
     image_loader: ImageLoader,
     bookmarks: dict[str, str],
+    left_indent: int | None = None,
 ) -> None:
     row_data = [block.headers, *block.rows]
     column_count = len(block.headers)
@@ -323,14 +408,17 @@ def _render_table(
     table = document.add_table(rows=len(row_data), cols=column_count, style=style_name)
     table.rows[0].repeat_as_header = True
     table.alignment = TABLE_ALIGNMENT[block.options.alignment]
+    if left_indent is not None:
+        table.left_indent = Emu(left_indent)
     set_widths = block.options.width == "page" or block.options.column_widths is not None
     table.autofit = not set_widths
     widths: list[int] = []
     if set_widths:
         ratios = list(block.options.column_widths or (1.0,) * column_count)
         ratio_total = sum(ratios)
-        widths = [round(settings.usable_width * ratio / ratio_total) for ratio in ratios]
-        widths[-1] += settings.usable_width - sum(widths)
+        usable_width = settings.usable_width - (left_indent or 0)
+        widths = [round(usable_width * ratio / ratio_total) for ratio in ratios]
+        widths[-1] += usable_width - sum(widths)
         for column, width in zip(table.columns, widths, strict=True):
             column.width = Emu(width)
 

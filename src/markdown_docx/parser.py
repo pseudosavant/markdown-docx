@@ -33,6 +33,8 @@ from markdown_docx.models import (
     HeadingBlock,
     ImageBlock,
     ImageOptions,
+    ListContent,
+    ListContentBlock,
     ListKind,
     ListParagraphBlock,
     PageBreakBlock,
@@ -308,7 +310,7 @@ def _consume_list(
     depth: int,
     options: DocumentOptions,
     input_path: str,
-) -> tuple[list[ListParagraphBlock], int]:
+) -> tuple[list[Block], int]:
     opening = tokens[index]
     ordered = opening.type == "ordered_list_open"
     kind: ListKind = "ordered" if ordered else "unordered"
@@ -324,7 +326,7 @@ def _consume_list(
     start = int(raw_start) if ordered and raw_start is not None else 1
     list_id = index
     closing_type = "ordered_list_close" if ordered else "bullet_list_close"
-    blocks: list[ListParagraphBlock] = []
+    blocks: list[Block] = []
     index += 1
     while index < len(tokens) and tokens[index].type != closing_type:
         item_open = tokens[index]
@@ -339,8 +341,20 @@ def _consume_list(
                 paragraph, index = _consume_paragraph(tokens, index, input_path)
                 if is_task_item(paragraph.fragments):
                     _unsupported("Task list syntax is not supported.", token, input_path)
-                if any(fragment.kind == "image" for fragment in paragraph.fragments):
-                    _unsupported("Images nested in list items are not supported.", token, input_path)
+                if is_standalone_image(paragraph.fragments):
+                    image = next(fragment for fragment in paragraph.fragments if fragment.kind == "image")
+                    image_content = ImageBlock(
+                        line=paragraph.line,
+                        src=image.src or "",
+                        alt=image.alt or "",
+                        title=image.title,
+                        options=ImageOptions(),
+                    )
+                    if not paragraph_seen:
+                        blocks.append(_empty_list_item(paragraph.line, kind, depth, list_id, item_id, start))
+                        paragraph_seen = True
+                    blocks.append(ListContentBlock(paragraph.line, image_content, list_id, item_id, depth))
+                    continue
                 blocks.append(
                     ListParagraphBlock(
                         line=paragraph.line,
@@ -354,6 +368,24 @@ def _consume_list(
                     )
                 )
                 paragraph_seen = True
+            elif token.type in {"fence", "code_block", "heading_open", "table_open", "blockquote_open"}:
+                if token.type in {"fence", "code_block"}:
+                    code_content = CodeBlock(line=_token_line(token), text=token.content)
+                    index += 1
+                    nested_blocks: list[ListContent] = [code_content]
+                elif token.type == "heading_open":
+                    heading_content, index = _consume_heading(tokens, index, input_path)
+                    nested_blocks = [heading_content]
+                elif token.type == "table_open":
+                    table_content, index = _consume_table(tokens, index, TableOptions(), input_path)
+                    nested_blocks = [table_content]
+                else:
+                    quote_blocks, index = _consume_blockquote(tokens, index, input_path)
+                    nested_blocks = [*quote_blocks]
+                if not paragraph_seen:
+                    blocks.append(_empty_list_item(_token_line(token), kind, depth, list_id, item_id, start))
+                    paragraph_seen = True
+                blocks.extend(ListContentBlock(block.line, block, list_id, item_id, depth) for block in nested_blocks)
             elif token.type in {"bullet_list_open", "ordered_list_open"}:
                 nested, index = _consume_list(tokens, index, depth=depth + 1, options=options, input_path=input_path)
                 blocks.extend(nested)
@@ -365,6 +397,20 @@ def _consume_list(
     if index >= len(tokens):
         _structure_error(opening, input_path)
     return blocks, index + 1
+
+
+def _empty_list_item(
+    line: int, kind: ListKind, depth: int, list_id: int, item_id: int, start: int
+) -> ListParagraphBlock:
+    return ListParagraphBlock(
+        line=line,
+        fragments=[],
+        list_kind=kind,
+        depth=depth,
+        list_id=list_id,
+        item_id=item_id,
+        start=start,
+    )
 
 
 def _consume_table(

@@ -7,12 +7,22 @@ import unicodedata
 from urllib.parse import unquote
 
 from markdown_docx.errors import ParseError
-from markdown_docx.models import Block, HeadingBlock, InlineFragment, ListParagraphBlock, ParagraphBlock, TableBlock
+from markdown_docx.models import (
+    Block,
+    HeadingBlock,
+    InlineFragment,
+    ListContentBlock,
+    ListParagraphBlock,
+    ParagraphBlock,
+    TableBlock,
+)
 
 
 def resolve_heading_links(blocks: list[Block], *, input_path: str) -> None:
     used: set[str] = set()
     for block in blocks:
+        if isinstance(block, ListContentBlock):
+            block = block.content
         if not isinstance(block, HeadingBlock):
             continue
         text = "".join(
@@ -53,6 +63,8 @@ def resolve_heading_links(blocks: list[Block], *, input_path: str) -> None:
 
 
 def _fragment_groups(block: Block) -> list[list[InlineFragment]]:
+    if isinstance(block, ListContentBlock):
+        return _fragment_groups(block.content)
     if isinstance(block, (HeadingBlock, ParagraphBlock, ListParagraphBlock)):
         return [block.fragments]
     if isinstance(block, TableBlock):

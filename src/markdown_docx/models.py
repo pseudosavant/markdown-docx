@@ -173,6 +173,18 @@ class SectionBreakBlock:
     settings: SectionSettings
 
 
+ListContent: TypeAlias = ParagraphBlock | HeadingBlock | CodeBlock | TableBlock | ImageBlock
+
+
+@dataclass(slots=True)
+class ListContentBlock:
+    line: int
+    content: ListContent
+    list_id: int
+    item_id: int
+    depth: int
+
+
 Block: TypeAlias = (
     ParagraphBlock
     | HeadingBlock
@@ -182,6 +194,7 @@ Block: TypeAlias = (
     | ImageBlock
     | PageBreakBlock
     | SectionBreakBlock
+    | ListContentBlock
 )
 
 

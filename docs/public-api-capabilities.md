@@ -1,8 +1,8 @@
 # Public `python-docx` capability matrix
 
-`markdown-docx` pins `ps-python-docx` 1.3.7, which retains the `docx` import package. The executable probe is `tests/test_public_api_capabilities.py`.
+`markdown-docx` pins `ps-python-docx` 1.3.8, which retains the `docx` import package. The executable probe is `tests/test_public_api_capabilities.py`.
 
-| Capability | Public API in fork 1.3.7 | Current behavior |
+| Capability | Public API in fork 1.3.8 | Current behavior |
 | --- | --- | --- |
 | Open blank DOCX or DOTX templates and save DOCX | Yes | Uses `Document(path)` |
 | Enumerate and validate styles | Yes | Supported |
@@ -13,6 +13,7 @@
 | Apply list paragraph styles | Yes | Supported within configured depth |
 | Preserve multiple Word paragraphs as one list item | Yes | Uses `ListInstance.apply_continuation` |
 | Control independent lists, starts, and restarts | Yes | Uses `Document.add_list` and `ListInstance.apply` |
+| Align tables within list items | Yes | Uses `ListInstance.continuation_left_indent` and `Table.left_indent` |
 | Create, align, and size tables | Yes | Supported |
 | Repeat leading table headers | Yes | Uses `row.repeat_as_header` |
 | Create native editable footnotes | Yes | Uses `Document.add_footnote` and `Document.footnotes` |

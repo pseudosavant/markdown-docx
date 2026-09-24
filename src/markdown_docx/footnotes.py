@@ -10,6 +10,7 @@ from markdown_docx.models import (
     Block,
     FootnoteDefinition,
     HeadingBlock,
+    ListContentBlock,
     ListParagraphBlock,
     ParagraphBlock,
     TableBlock,
@@ -54,6 +55,8 @@ def consume_footnote(tokens: list[Token], index: int, *, input_path: str) -> tup
 def validate_footnotes(blocks: list[Block], notes: dict[str, FootnoteDefinition], *, input_path: str) -> None:
     used: set[str] = set()
     for block in blocks:
+        if isinstance(block, ListContentBlock):
+            block = block.content
         if isinstance(block, (ParagraphBlock, HeadingBlock, ListParagraphBlock)):
             groups = [block.fragments]
         elif isinstance(block, TableBlock):

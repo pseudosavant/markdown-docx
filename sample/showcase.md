@@ -218,6 +218,26 @@ A paragraph separates the next list from the previous sequence.
    - Unordered child
       - Unordered grandchild
 
+## Rich list items
+
+1. This item contains several editable blocks beneath one Word list number.
+
+   ```python
+   print("Nested code")
+   ```
+
+   > A quote inside the list item stays indented with its text.
+
+   | Part | Status |
+   | --- | --- |
+   | Code | Ready |
+
+   ![The three dogs together](assets/dog-trio-inline.png)
+
+   The final paragraph still belongs to the same numbered item.
+
+2. Numbering continues after the nested blocks.
+
 <!-- markdown-docx
 section:
   page_size: a4

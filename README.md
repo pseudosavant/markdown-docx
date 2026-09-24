@@ -346,7 +346,7 @@ The current release supports:
 - Markdown links with formatted labels and optional titles, plus bare URL links
 - Fenced and indented code blocks
 - Blockquotes containing paragraphs
-- Ordered and unordered lists, including mixed nesting
+- Ordered and unordered lists, including mixed nesting and rich item content
 - Pipe tables with inline text formatting
 - Local and remote inline images
 - Standalone images with width and alignment metadata
@@ -356,13 +356,14 @@ The following syntax is intentionally unsupported:
 - Raw HTML and non-reserved HTML comments
 - Horizontal rules
 - Task lists
-- Tables, images, code blocks, or blockquotes nested inside list items
 - Images inside table cells or blockquotes
 - Arbitrary Markdown extensions
 
 Links such as `[link text](https://example.com)` and bare URLs become native, clickable, editable Word hyperlinks. Labels preserve bold, italic, strikethrough, superscript, subscript, inline code, and line breaks. Optional Markdown titles become Word tooltips. Links work in paragraphs, headings, blockquotes, lists, and table cells. Reference links, angle-bracket autolinks, email links, relative file links, and linked inline images are supported wherever their content is allowed. Destinations are stored without fetching them. Relative file links are resolved by Word relative to the output document. Empty destinations are rejected. Every heading creates a bookmark. Link to its slug with `[Details](#details)`, including before the heading. Slugs use plain heading text and image labels, normalized to NFC and lowercase. Punctuation is removed except underscores and hyphens. Whitespace becomes a hyphen. Empty slugs use `section`. Duplicates receive `-1`, `-2`, and later available suffixes in document order. Unicode and percent-encoded fragments are supported. Fragments must match the slug exactly. Missing targets produce `internal_link_unresolved` with the source line. Word bookmark names are generated separately to fit Word constraints.
 
 Use `~~deleted~~` for strikethrough, `x^2^` for superscript, and `H~2~O` for subscript. Setext headings use `===` for level one and `---` for level two on the next line. Indent code by four spaces to create a code block.
+
+List items can contain paragraphs, headings, code blocks, blockquotes, tables, and images. Indent each nested block under its list item. Only the first item paragraph receives a number or bullet. Later paragraphs and blocks align with its text. A table in a list item keeps that indentation through the public ps-python-docx APIs.
 
 ```markdown
 Read the [**project documentation**](https://example.com/docs "Read the guide").
@@ -472,9 +473,9 @@ uvx --refresh --from . markdown-docx sample\showcase.md sample\showcase.docx --f
 
 ## Design and compatibility
 
-Both development installs and published wheels use `ps-python-docx==1.3.7` from PyPI. It retains the `docx` import package and replaces the upstream `python-docx` distribution. Use `uv sync --locked --all-groups` and `uv run markdown-docx` when working from source. CI and the release workflow test a clean wheel installation from PyPI.
+Both development installs and published wheels use `ps-python-docx==1.3.8` from PyPI. It retains the `docx` import package and replaces the upstream `python-docx` distribution. Use `uv sync --locked --all-groups` and `uv run markdown-docx` when working from source. CI and the release workflow test a clean wheel installation from PyPI.
 
-Production code uses only the public `docx` APIs provided by `ps-python-docx` 1.3.7. Native hyperlinks, image descriptions and titles, theme fonts, style references, linked styles, and document defaults use public library APIs. `src/markdown_docx/hyperlinks.py` applies Markdown styling through the public hyperlink API. Tests enforce the public API boundary and inspect saved image metadata, hyperlinks, theme data, style inheritance, and effective font selection. See [public API capabilities](docs/public-api-capabilities.md) for the decision record.
+Production code uses only the public `docx` APIs provided by `ps-python-docx` 1.3.8. Native hyperlinks, image descriptions and titles, theme fonts, style references, linked styles, and document defaults use public library APIs. `src/markdown_docx/hyperlinks.py` applies Markdown styling through the public hyperlink API. Tests enforce the public API boundary and inspect saved image metadata, hyperlinks, theme data, style inheritance, and effective font selection. See [public API capabilities](docs/public-api-capabilities.md) for the decision record.
 
 The visual CI job also renders font regression documents through LibreOffice using installed Liberation fonts. It verifies the fonts recorded in the PDF, then changes only the theme and checks that the rendered fonts follow it. To run the same check through installed Microsoft Word with Aptos and Aptos Display on Windows:
 

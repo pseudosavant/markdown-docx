@@ -23,7 +23,7 @@ def package_parts(path: Path) -> set[str]:
         return set(archive.namelist())
 
 
-def test_ps_python_docx_132_public_api_capability_matrix(tmp_path: Path) -> None:
+def test_ps_python_docx_138_public_api_capability_matrix(tmp_path: Path) -> None:
     source = tmp_path / "source.docx"
     output = tmp_path / "output.docx"
     document = Document()
@@ -55,9 +55,14 @@ def test_ps_python_docx_132_public_api_capability_matrix(tmp_path: Path) -> None
     document.add_paragraph("Nested bullet", style="List Bullet 2")
     document.add_paragraph("Number", style="List Number")
     document.add_paragraph("Nested number", style="List Number 2")
+    sequence = document.add_list("List Number")
+    item = document.add_paragraph("Numbered content", style="List Number")
+    assert sequence.continuation_left_indent(item) == Inches(0.25)
+    sequence.apply(item)
 
     table = document.add_table(rows=2, cols=2, style="Table Grid")
     table.autofit = False
+    table.left_indent = sequence.continuation_left_indent(item)
     for column, width in zip(table.columns, (Inches(4), Inches(2)), strict=True):
         column.width = width
     table.cell(0, 0).text = "Item"
@@ -89,6 +94,7 @@ def test_ps_python_docx_132_public_api_capability_matrix(tmp_path: Path) -> None
     assert reopened.styles.default_font.theme_font == "minor"
     assert reopened.styles["Heading 1"].linked_style.font.theme_font == "major"
     assert len(reopened.tables) == 1
+    assert reopened.tables[0].left_indent == Inches(0.25)
     assert len(reopened.inline_shapes) == 1
     assert reopened.inline_shapes[0].description == "A pixel"
     assert reopened.inline_shapes[0].title == "Pixel title"
@@ -100,6 +106,6 @@ def test_ps_python_docx_132_public_api_capability_matrix(tmp_path: Path) -> None
 
 
 def test_only_the_fork_distribution_provides_docx() -> None:
-    assert metadata.version("ps-python-docx") == "1.3.7"
+    assert metadata.version("ps-python-docx") == "1.3.8"
     with pytest.raises(metadata.PackageNotFoundError):
         metadata.distribution("python-docx")
