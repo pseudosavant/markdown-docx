@@ -128,6 +128,24 @@ def test_image_metadata_parses_width_and_alignment() -> None:
 
 
 @pytest.mark.parametrize(
+    ("label", "expected"),
+    [
+        ("**Bold** and *italic* with `code`", "Bold and italic with code"),
+        ("A &amp; B", "A & B"),
+        (r"Escaped \*stars\*", "Escaped *stars*"),
+        ("Outer ![inner](nested.png)", "Outer inner"),
+        ("First\nsecond", "First\nsecond"),
+        ("", ""),
+    ],
+)
+def test_image_metadata_uses_plain_label_text_and_optional_title(label: str, expected: str) -> None:
+    image = parse(f'![{label}](image.png "Image title")').blocks[0]
+    assert isinstance(image, ImageBlock)
+    assert image.alt == expected
+    assert image.title == "Image title"
+
+
+@pytest.mark.parametrize(
     ("source", "code"),
     [
         ("[link](#heading)\n", "unsupported_feature"),

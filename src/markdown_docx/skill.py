@@ -89,6 +89,8 @@ Use ATX headings, paragraphs, emphasis, strong text, inline code, hard line brea
 
 Relative image paths resolve from the Markdown file. When reading stdin, provide an output and `--base-dir`. Use `--no-remote-images` for offline or untrusted input.
 
+Write meaningful image descriptions as `![alt text](image.png "Optional title")`. Alt text becomes the Word image description and the optional title becomes its image title. Standalone, inline, and linked images support both. Formatting markers in alt text are removed while their text is preserved. Empty alt text stays empty and does not automatically mark an image as decorative.
+
 ## Handle results
 
 Prefer `--json` for automation. Success includes the absolute output path, section count, template identifier, and warnings. Failures include a stable code, message, input path, and line when available. Correct the source before retrying.

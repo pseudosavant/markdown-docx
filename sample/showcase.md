@@ -40,7 +40,7 @@ image:
   width: 92%
   alignment: center
 -->
-![Pepper, Biscuit, and Juniper begin their park run](assets/dog-run-start.png)
+![Pepper, Biscuit, and Juniper begin their park run](assets/dog-run-start.png "The park run begins")
 
 The cast, from shortest stride to longest:
 

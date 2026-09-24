@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.3
+
+- Embed Markdown image alt text as native Word image descriptions through ps-python-docx 1.3.2 public APIs.
+- Preserve optional image titles for standalone, inline, reference, and linked images.
+- Convert formatted image labels to plain descriptions. Preserve empty descriptions and separate metadata for each use of an image.
+- Remove the image_alt_text_not_embedded warning and update the managed skill and showcase.
+
 ## 0.3.2
 
 - Use ps-python-docx 1.3.1 public hyperlink authoring APIs. Remove the remaining production OOXML access.

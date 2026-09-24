@@ -61,7 +61,6 @@ def render_docx(
     image_loader = ImageLoader(base_dir, allow_remote=allow_remote_images)
     reusable = _reusable_initial_paragraph(document)
     warnings = list(model.warnings)
-    image_seen = False
 
     try:
         for block in model.blocks:
@@ -77,7 +76,7 @@ def render_docx(
                     style=model.options.styles.headings[block.level],
                     reusable=reusable,
                 )
-                image_seen |= _render_fragments(
+                _render_fragments(
                     paragraph,
                     block.fragments,
                     image_loader=image_loader,
@@ -91,7 +90,7 @@ def render_docx(
                     model.options.styles.blockquote if block.role == "blockquote" else model.options.styles.paragraph
                 )
                 paragraph, reusable = _new_paragraph(document, style=style, reusable=reusable)
-                image_seen |= _render_fragments(
+                _render_fragments(
                     paragraph,
                     block.fragments,
                     image_loader=image_loader,
@@ -114,7 +113,7 @@ def render_docx(
                     else model.options.styles.unordered_list
                 )
                 paragraph, reusable = _new_paragraph(document, style=styles[block.depth], reusable=reusable)
-                image_seen |= _render_fragments(
+                _render_fragments(
                     paragraph,
                     block.fragments,
                     image_loader=image_loader,
@@ -146,12 +145,11 @@ def render_docx(
                     line=block.line,
                     input_path=model.source_name,
                 )
-                paragraph.add_run().add_picture(BytesIO(asset.data), width=Emu(width))
-                image_seen = True
+                picture = paragraph.add_run().add_picture(BytesIO(asset.data), width=Emu(width))
+                picture.description = block.alt
+                picture.title = block.title
             else:
                 raise AssertionError(f"Unhandled block type: {type(block).__name__}")
-        if image_seen:
-            warnings.append("image_alt_text_not_embedded")
         _save_atomically(document, output_path)
     except MarkdownDocxError:
         raise
@@ -204,8 +202,7 @@ def _render_fragments(
     monospace: str,
     line: int,
     input_path: str,
-) -> bool:
-    image_seen = False
+) -> None:
     hyperlink: HyperlinkWriter | None = None
     for fragment in fragments:
         if fragment.kind == "link_open":
@@ -223,15 +220,15 @@ def _render_fragments(
             run = container.add_run()
             run.bold = fragment.bold or None
             run.italic = fragment.italic or None
-            run.add_picture(BytesIO(asset.data), width=Emu(width))
-            image_seen = True
+            picture = run.add_picture(BytesIO(asset.data), width=Emu(width))
+            picture.description = fragment.alt or ""
+            picture.title = fragment.title
         else:
             run = container.add_run(fragment.text or "")
             run.bold = fragment.bold or None
             run.italic = fragment.italic or None
             if fragment.code:
                 run.font.name = monospace
-    return image_seen
 
 
 def _render_table(

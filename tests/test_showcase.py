@@ -130,10 +130,12 @@ def test_showcase_renders_as_editable_native_word_content(tmp_path: Path) -> Non
 
     document = Document(output)
     assert result["sections"] == 5
-    assert result["warnings"] == ["image_alt_text_not_embedded"]
+    assert result["warnings"] == []
     assert len(document.sections) == 5
     assert len(document.tables) == 4
     assert len(document.inline_shapes) == 8
+    assert all(shape.description for shape in document.inline_shapes)
+    assert document.inline_shapes[0].title == "The park run begins"
     assert any(paragraph.text == "The Great Lunch Bag Chase" for paragraph in document.paragraphs)
     assert any(paragraph.text == "Back to Document Defaults" for paragraph in document.paragraphs)
     assert any(paragraph.hyperlinks for paragraph in document.paragraphs)

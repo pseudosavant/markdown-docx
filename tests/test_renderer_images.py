@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 from pathlib import Path
+from xml.etree import ElementTree as ET
+from zipfile import ZipFile
 
 import pytest
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.shape import InlineShape
 from PIL import Image
 
 from markdown_docx.errors import AssetError
@@ -12,7 +15,47 @@ from markdown_docx.parser import parse_document
 from markdown_docx.renderer import render_docx
 
 
-def test_standalone_image_width_alignment_and_warning(tmp_path: Path, png_file: Path) -> None:
+@pytest.mark.parametrize(
+    "source",
+    [
+        '![Café **chart** & `code`](image.png "Revenue")',
+        'Before ![Café **chart** & `code`](image.png "Revenue") after.',
+        '[![Café **chart** & `code`](image.png "Revenue")](https://example.com "Link tooltip")',
+        '![Café **chart** & `code`][chart]\n\n[chart]: image.png "Revenue"',
+    ],
+)
+def test_image_description_and_title_round_trip(tmp_path: Path, png_file: Path, source: str) -> None:
+    model = parse_document(source, input_path=tmp_path / "input.md", source_name="input.md")
+    output = tmp_path / "described.docx"
+    result = render_docx(model, output, template_path=None, base_dir=tmp_path, allow_remote_images=False)
+    document = Document(output)
+    shape = InlineShape(document.paragraphs[0]._p.xpath(".//wp:inline")[0])
+    assert shape.description == "Café chart & code"
+    assert shape.title == "Revenue"
+    assert result["warnings"] == []
+    if source.startswith("[!["):
+        assert document.paragraphs[0].hyperlinks[0].tooltip == "Link tooltip"
+    with ZipFile(output) as package:
+        body = ET.fromstring(package.read("word/document.xml"))
+    props = body.find(".//{http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing}docPr")
+    assert props is not None
+    assert props.get("descr") == "Café chart & code"
+    assert props.get("title") == "Revenue"
+
+
+def test_repeated_image_instances_keep_empty_and_distinct_metadata(tmp_path: Path, png_file: Path) -> None:
+    source = '![](image.png)\n\n![Second](image.png "")\n\n![Third](image.png "Title")'
+    model = parse_document(source, input_path=tmp_path / "input.md", source_name="input.md")
+    output = tmp_path / "repeated.docx"
+    render_docx(model, output, template_path=None, base_dir=tmp_path, allow_remote_images=False)
+    assert [(shape.description, shape.title) for shape in Document(output).inline_shapes] == [
+        ("", None),
+        ("Second", None),
+        ("Third", "Title"),
+    ]
+
+
+def test_standalone_image_width_alignment_and_alt_text(tmp_path: Path, png_file: Path) -> None:
     source = """<!-- markdown-docx
 image:
   width: 50%
@@ -28,7 +71,8 @@ image:
     assert document.paragraphs[0].alignment == WD_ALIGN_PARAGRAPH.CENTER
     assert document.inline_shapes[0].width.inches == pytest.approx(3.25, abs=0.01)
     assert document.inline_shapes[0].height.inches == pytest.approx(3.25, abs=0.01)
-    assert result["warnings"] == ["image_alt_text_not_embedded"]
+    assert document.inline_shapes[0].description == "Pixel"
+    assert result["warnings"] == []
 
 
 def test_inline_image_stays_in_text_paragraph(tmp_path: Path, png_file: Path) -> None:

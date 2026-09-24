@@ -11,6 +11,19 @@ FOOTNOTE_PATTERN = re.compile(r"\[\^[^\]]+\]")
 TASK_PATTERN = re.compile(r"^\[[ xX]\]\s")
 
 
+def _image_alt_text(tokens: list[Token]) -> str:
+    """Read image descriptions as plain text, preserving code and nested image labels."""
+    parts = []
+    for token in tokens:
+        if token.type in {"text", "text_special", "code_inline"}:
+            parts.append(token.content)
+        elif token.type in {"softbreak", "hardbreak"}:
+            parts.append("\n")
+        elif token.type == "image":
+            parts.append(_image_alt_text(token.children or []))
+    return "".join(parts)
+
+
 def parse_inline(token: Token, *, line: int, input_path: str | None) -> list[InlineFragment]:
     fragments: list[InlineFragment] = []
     bold = False
@@ -37,11 +50,13 @@ def parse_inline(token: Token, *, line: int, input_path: str | None) -> list[Inl
             italic = False
         elif child_type == "image":
             raw_source = child.attrGet("src")
+            raw_title = child.attrGet("title")
             fragments.append(
                 InlineFragment(
                     kind="image",
                     src=raw_source if isinstance(raw_source, str) else "",
-                    alt=child.content,
+                    alt=_image_alt_text(child.children or []),
+                    title=raw_title if isinstance(raw_title, str) else None,
                     bold=bold,
                     italic=italic,
                 )

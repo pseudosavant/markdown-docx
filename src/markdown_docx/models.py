@@ -148,6 +148,7 @@ class ImageBlock:
     src: str
     alt: str
     options: ImageOptions
+    title: str | None = None
 
 
 @dataclass(slots=True)

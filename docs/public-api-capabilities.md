@@ -1,8 +1,8 @@
 # Public `python-docx` capability matrix
 
-`markdown-docx` pins `ps-python-docx` 1.3.1, which retains the `docx` import package. The executable probe is `tests/test_public_api_capabilities.py`.
+`markdown-docx` pins `ps-python-docx` 1.3.2, which retains the `docx` import package. The executable probe is `tests/test_public_api_capabilities.py`.
 
-| Capability | Public API in fork 1.3.1 | Current behavior |
+| Capability | Public API in fork 1.3.2 | Current behavior |
 | --- | --- | --- |
 | Open and save blank DOCX templates | Yes | Supported |
 | Enumerate and validate styles | Yes | Supported |
@@ -16,7 +16,7 @@
 | Add inline pictures with preserved aspect ratio | Yes | Supported |
 | Align picture paragraphs | Yes | Supported |
 | Create native hyperlinks | Yes | Uses `Paragraph.add_hyperlink`, `Hyperlink.add_run`, and tooltip support |
-| Set image alt text | No | Source alt text is preserved in Markdown but cannot be embedded |
+| Set image alt text and titles | Yes | Uses `InlineShape.description` and `InlineShape.title` for standalone, inline, and linked images |
 
 The fork's public text API creates external hyperlinks with `Paragraph.add_hyperlink` and formatted label runs with `Hyperlink.add_run`. `src/markdown_docx/hyperlinks.py` applies the Hyperlink character style through public APIs. Existing template hyperlink styles are preserved. Optional link titles become tooltips. Empty destinations and document-local bookmark links are rejected with `unsupported_feature`. The library owns hyperlink XML and external relationships.
 
@@ -26,7 +26,7 @@ The public theme API implements the requirement that explicit Markdown font over
 
 `tests/test_theme_fonts.py` checks serialized theme definitions, references, effective font resolution, partial overrides, custom mappings, and preservation. `tests/test_font_rendering.py` verifies actual PDF font names after layout and again after a theme change. The default suite runs without Office. CI enables the layout test with LibreOffice and Liberation fonts. The optional Word run uses Aptos and Aptos Display and fails on font substitution.
 
-The public drawing API exposes inline shape dimensions and type but no alt-text property. Direct XML changes for image alt text or other features are not allowed in production code.
+The public drawing API exposes read/write `InlineShape.description` and `InlineShape.title` properties. Markdown image labels become plain-text descriptions and optional image titles are preserved. Empty alt text stays empty without marking the image as decorative. Metadata belongs to each placed image. The library owns the drawing XML, and production code uses only its public properties.
 
 Word lists are paragraph numbering, not container objects. The public API can apply a list style to a paragraph, but it cannot attach an unnumbered continuation paragraph to the preceding list item or inspect the numbering definition that owns its indentation. Treating every source paragraph as a new numbered item or flattening paragraphs into line breaks would change the source meaning. Version 0.1.0 therefore rejects multi-paragraph list items instead of approximating them.
 

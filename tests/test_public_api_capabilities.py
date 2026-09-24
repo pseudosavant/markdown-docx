@@ -23,7 +23,7 @@ def package_parts(path: Path) -> set[str]:
         return set(archive.namelist())
 
 
-def test_ps_python_docx_131_public_api_capability_matrix(tmp_path: Path) -> None:
+def test_ps_python_docx_132_public_api_capability_matrix(tmp_path: Path) -> None:
     source = tmp_path / "source.docx"
     output = tmp_path / "output.docx"
     document = Document()
@@ -68,6 +68,8 @@ def test_ps_python_docx_131_public_api_capability_matrix(tmp_path: Path) -> None
     shape = image_paragraph.add_run().add_picture(BytesIO(PNG_1X1), width=Inches(1))
     assert shape.width == Inches(1)
     assert shape.height == Inches(1)
+    shape.description = "A pixel"
+    shape.title = "Pixel title"
 
     link = document.add_paragraph().add_hyperlink(address="https://example.com", tooltip="Details")
     link.add_run("Example ")
@@ -88,6 +90,8 @@ def test_ps_python_docx_131_public_api_capability_matrix(tmp_path: Path) -> None
     assert reopened.styles["Heading 1"].linked_style.font.theme_font == "major"
     assert len(reopened.tables) == 1
     assert len(reopened.inline_shapes) == 1
+    assert reopened.inline_shapes[0].description == "A pixel"
+    assert reopened.inline_shapes[0].title == "Pixel title"
     reopened_link = reopened.paragraphs[-1].hyperlinks[0]
     assert reopened_link.url == "https://example.com"
     assert reopened_link.tooltip == "Details"
@@ -95,13 +99,7 @@ def test_ps_python_docx_131_public_api_capability_matrix(tmp_path: Path) -> None
     assert reopened_link.runs[1].bold is True
 
 
-def test_unsupported_authoring_capabilities_are_not_public() -> None:
-    shape = Document().add_picture(BytesIO(PNG_1X1))
-    assert not hasattr(shape, "alt_text")
-    assert not hasattr(shape, "description")
-
-
 def test_only_the_fork_distribution_provides_docx() -> None:
-    assert metadata.version("ps-python-docx") == "1.3.1"
+    assert metadata.version("ps-python-docx") == "1.3.2"
     with pytest.raises(metadata.PackageNotFoundError):
         metadata.distribution("python-docx")
