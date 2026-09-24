@@ -311,6 +311,7 @@ def _render_table(
     column_count = len(block.headers)
     style_name = block.options.style or model.options.styles.table
     table = document.add_table(rows=len(row_data), cols=column_count, style=style_name)
+    table.rows[0].repeat_as_header = True
     table.alignment = TABLE_ALIGNMENT[block.options.alignment]
     set_widths = block.options.width == "page" or block.options.column_widths is not None
     table.autofit = not set_widths

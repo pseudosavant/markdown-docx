@@ -1,8 +1,8 @@
 # Public `python-docx` capability matrix
 
-`markdown-docx` pins `ps-python-docx` 1.3.5, which retains the `docx` import package. The executable probe is `tests/test_public_api_capabilities.py`.
+`markdown-docx` pins `ps-python-docx` 1.3.6, which retains the `docx` import package. The executable probe is `tests/test_public_api_capabilities.py`.
 
-| Capability | Public API in fork 1.3.5 | Current behavior |
+| Capability | Public API in fork 1.3.6 | Current behavior |
 | --- | --- | --- |
 | Open and save blank DOCX templates | Yes | Supported |
 | Enumerate and validate styles | Yes | Supported |
@@ -42,3 +42,5 @@ References:
 Native footnotes use `Document.add_footnote`, `Document.footnotes`, and `Run.footnote_ids`. Note paragraphs and hyperlinks use public story APIs. The converter performs no XML writes for note creation.
 
 Native footnotes use `Document.add_footnote`, `Document.footnotes`, and `Run.footnote_ids`. Note paragraphs and hyperlinks use public story APIs. The converter performs no XML writes for note creation.
+
+Pipe-table headers use the public `row.repeat_as_header` property. Body rows retain their defaults.

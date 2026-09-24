@@ -28,6 +28,8 @@ table:
     output = tmp_path / "table.docx"
     render_docx(model, output, template_path=None, base_dir=tmp_path, allow_remote_images=False)
     table = Document(output).tables[0]
+    assert table.rows[0].repeat_as_header is True
+    assert all(row.repeat_as_header is None for row in table.rows[1:])
     assert table.style.name == "Table Grid"
     assert table.alignment == WD_TABLE_ALIGNMENT.CENTER
     assert table.columns[0].width.inches == pytest.approx(4.875, abs=0.02)

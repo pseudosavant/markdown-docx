@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.7
+
+- Repeat pipe-table header rows automatically across pages through ps-python-docx 1.3.6.
+- Leave body rows and unrelated table formatting unchanged.
+
 ## 0.3.6
 
 - Convert named Markdown footnotes into native editable Word notes through ps-python-docx 1.3.5.

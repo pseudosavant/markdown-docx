@@ -132,7 +132,8 @@ def test_showcase_renders_as_editable_native_word_content(tmp_path: Path) -> Non
     assert result["sections"] == 5
     assert result["warnings"] == []
     assert len(document.sections) == 5
-    assert len(document.tables) == 4
+    assert len(document.tables) == 5
+    assert all(table.rows[0].repeat_as_header is True for table in document.tables)
     assert len(document.inline_shapes) == 8
     assert all(shape.description for shape in document.inline_shapes)
     assert document.inline_shapes[0].title == "The park run begins"

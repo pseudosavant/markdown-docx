@@ -331,3 +331,12 @@ This statement has an editable Word footnote[^source].
 [^source]: A **formatted** explanation with a [reference link](https://example.com).
 
     A second paragraph keeps the note content together.
+
+## Repeating table headers
+
+Pipe-table headers repeat automatically when their table spans pages. Body rows retain their normal behavior.
+
+| Capability | Behavior |
+| --- | --- |
+| Header row | Repeats on later table pages |
+| Body row | Appears once |
