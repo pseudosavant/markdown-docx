@@ -81,6 +81,8 @@ Start a next-page section with a `section` comment. Insert an explicit page brea
 
 Run `uvx markdown-docx --syntax` for every accepted key and value.
 
+Set `document.fonts.body` and `document.fonts.headings` to change Word's Latin theme fonts. For example, use Aptos for body and Aptos Display for headings. Mapped styles inherit from these theme slots, so later theme changes update the document. Omitted overrides preserve the corresponding template fonts. `document.fonts.monospace` remains a fixed font for code. Fonts are not embedded or installed. Use distinct styles for body, heading, and code roles when overriding their fonts.
+
 ## Supported Markdown
 
 Use ATX headings, paragraphs, emphasis, strong text, inline code, hard line breaks, fenced code blocks, blockquotes, lists, pipe tables, links, and local or remote images. Write `[link text](https://example.com)` for native editable Word hyperlinks. Link labels preserve formatting and optional titles become tooltips. Links work in paragraphs, headings, quotes, lists, and table cells. Reference links, angle-bracket autolinks, mailto links, relative file links, and linked inline images are supported wherever their content is allowed. Relative file links resolve from the output document. Destinations are not fetched. Bare URLs remain plain text. Empty destinations and document-local links such as `[heading](#heading)` are rejected. Heading bookmarks are not generated. Raw HTML, task lists, footnotes, horizontal rules, indented code, multi-paragraph list items, and unsupported nested block content are rejected.

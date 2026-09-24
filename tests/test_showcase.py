@@ -38,8 +38,8 @@ def test_showcase_covers_portable_markdown_and_metadata_features() -> None:
     assert model.options.styles.ordered_list == ["List Number", "List Number 2", "List Number 3"]
     assert model.options.styles.unordered_list == ["List Bullet", "List Bullet 2", "List Bullet 3"]
     assert model.options.styles.table == "Table Grid"
-    assert model.options.fonts.body == "Calibri"
-    assert model.options.fonts.headings == "Calibri"
+    assert model.options.fonts.body == "Aptos"
+    assert model.options.fonts.headings == "Aptos Display"
     assert model.options.fonts.monospace == "Consolas"
 
     block_types = {type(block) for block in model.blocks}

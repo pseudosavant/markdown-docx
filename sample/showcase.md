@@ -22,8 +22,8 @@ document:
     unordered_list: [List Bullet, List Bullet 2, List Bullet 3]
     table: Table Grid
   fonts:
-    body: Calibri
-    headings: Calibri
+    body: Aptos
+    headings: Aptos Display
     monospace: Consolas
 -->
 
