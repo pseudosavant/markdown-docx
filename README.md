@@ -438,7 +438,7 @@ uvx --refresh --from . markdown-docx sample\showcase.md sample\showcase.docx --f
 
 ## Design and compatibility
 
-Development checkouts temporarily resolve `ps-python-docx` from the exact Git commit in `tool.uv.sources`. Use `uv sync --locked --all-groups` and `uv run markdown-docx` when working from source. The wheel declares `ps-python-docx==1.3.0` as a normal PyPI dependency. Publish that fork release before releasing this version of markdown-docx, then remove the source override and regenerate `uv.lock`. The release workflow tests a clean wheel installation from PyPI before publishing.
+Both development installs and published wheels use `ps-python-docx==1.3.0` from PyPI. It retains the `docx` import package and replaces the upstream `python-docx` distribution. Use `uv sync --locked --all-groups` and `uv run markdown-docx` when working from source. CI and the release workflow test a clean wheel installation from PyPI.
 
 Production code uses the public `docx` APIs provided by `ps-python-docx` 1.3.0. Theme fonts, style references, linked styles, and document defaults use public library APIs. The only OOXML exception is `src/markdown_docx/hyperlinks.py` for native hyperlink creation. Replace that helper when a supported creation API becomes available. Tests enforce this boundary and inspect saved theme data, style inheritance, and effective font selection. See [public API capabilities](docs/public-api-capabilities.md) for the decision record.
 

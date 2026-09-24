@@ -1,9 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.3.1
 
 - Use ps-python-docx 1.3.0 public theme APIs. Remove theme-related OOXML access from production code.
-
 - Apply body and heading font overrides to Word's actual theme fonts. Preserve theme inheritance in mapped styles and linked character styles instead of applying literal fonts to individual headings.
 - Preserve unspecified theme slots and unrelated theme settings. Keep code in its explicit monospace font. Handle missing themes and diagnose malformed themes and conflicting style roles.
 - Add saved-package font cascade tests and layout-engine regression checks that verify PDF fonts before and after changing the theme. Exercise Aptos and Aptos Display with Word and Liberation fonts in visual CI.

@@ -812,7 +812,7 @@ wheels = [
 
 [[package]]
 name = "markdown-docx"
-version = "0.3.0"
+version = "0.3.1"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },
@@ -839,7 +839,7 @@ requires-dist = [
     { name = "markdown-it-py", specifier = ">=3.0,<5" },
     { name = "packaging", specifier = ">=24.0" },
     { name = "pillow", specifier = ">=10.0,<13" },
-    { name = "ps-python-docx", git = "https://github.com/pseudosavant/python-docx?rev=c0c540f90a97407f12dafc4b90ef9438b0da4392" },
+    { name = "ps-python-docx", specifier = "==1.3.0" },
     { name = "pyyaml", specifier = ">=6.0,<7" },
 ]
 
@@ -1128,10 +1128,13 @@ wheels = [
 [[package]]
 name = "ps-python-docx"
 version = "1.3.0"
-source = { git = "https://github.com/pseudosavant/python-docx?rev=c0c540f90a97407f12dafc4b90ef9438b0da4392#c0c540f90a97407f12dafc4b90ef9438b0da4392" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "lxml" },
     { name = "typing-extensions" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/79/c7/a22f6650925df53d6f09be9a93984f3a7698c830987725c473da0f78b7f4/ps_python_docx-1.3.0-py3-none-any.whl", hash = "sha256:51d9ecf4a14394322f70ac7296b9ae0f5caf47216d14bef0bc4f125c67bc90be", size = 256769, upload_time = "2026-09-24T05:42:12.009Z" },
 ]
 
 [[package]]

@@ -123,8 +123,7 @@ jobs:
         shell: bash
         run: |
           python -m venv .wheel-smoke
-          uv export --locked --no-dev --no-emit-project --no-hashes --format requirements-txt -o .wheel-requirements.txt
-          uv pip install --python .wheel-smoke/bin/python -r .wheel-requirements.txt dist/*.whl
+          .wheel-smoke/bin/python -m pip install dist/*.whl
           .wheel-smoke/bin/markdown-docx --version
           .wheel-smoke/bin/markdown-docx --syntax --json
           .wheel-smoke/bin/python scripts/smoke_skill.py
