@@ -151,13 +151,25 @@ def test_image_metadata_uses_plain_label_text_and_optional_title(label: str, exp
         ("[link]()\n", "unsupported_feature"),
         ("<span>raw</span>\n", "unsupported_markdown"),
         ("---\n", "unsupported_markdown"),
-        ("- [ ] task\n", "unsupported_markdown"),
     ],
 )
 def test_unsupported_markdown_is_rejected(source: str, code: str) -> None:
     with pytest.raises(UnsupportedFeatureError) as excinfo:
         parse(source)
     assert excinfo.value.context.code == code
+
+
+def test_task_list_markers_become_checked_states_and_keep_inline_formatting() -> None:
+    blocks = parse("- [ ] Buy **milk**\n- [x] Pay bill\n- [X] Send mail\n- Plain item\n").blocks
+    items = [block for block in blocks if isinstance(block, ListParagraphBlock)]
+    assert [item.task_checked for item in items] == [False, True, True, None]
+    assert ["".join(fragment.text or "" for fragment in item.fragments) for item in items] == [
+        "Buy milk",
+        "Pay bill",
+        "Send mail",
+        "Plain item",
+    ]
+    assert any(fragment.text == "milk" and fragment.bold for fragment in items[0].fragments)
 
 
 def test_extended_inline_syntax_and_bare_url() -> None:

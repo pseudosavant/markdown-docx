@@ -1,8 +1,8 @@
 # Public `python-docx` capability matrix
 
-`markdown-docx` pins `ps-python-docx` 1.3.8, which retains the `docx` import package. The executable probe is `tests/test_public_api_capabilities.py`.
+`markdown-docx` pins `ps-python-docx` 1.3.9, which retains the `docx` import package. The executable probe is `tests/test_public_api_capabilities.py`.
 
-| Capability | Public API in fork 1.3.8 | Current behavior |
+| Capability | Public API in fork 1.3.9 | Current behavior |
 | --- | --- | --- |
 | Open blank DOCX or DOTX templates and save DOCX | Yes | Uses `Document(path)` |
 | Enumerate and validate styles | Yes | Supported |
@@ -21,6 +21,7 @@
 | Align picture paragraphs | Yes | Supported |
 | Create and find bookmarks | Yes | Uses `Document.bookmarks` |
 | Create native hyperlinks | Yes | Uses `Paragraph.add_hyperlink`, `Hyperlink.add_run`, and tooltip support |
+| Create clickable task check boxes | Yes | Uses `Paragraph.add_checkbox` and `CheckBox.checked` |
 | Set image alt text and titles | Yes | Uses `InlineShape.description` and `InlineShape.title` for standalone, inline, and linked images |
 
 The fork's public text API creates external hyperlinks with `Paragraph.add_hyperlink` and formatted label runs with `Hyperlink.add_run`. `src/markdown_docx/hyperlinks.py` applies the Hyperlink character style through public APIs. Existing template hyperlink styles are preserved. Optional link titles become tooltips. Empty destinations are rejected with `unsupported_feature`. Internal links use `Paragraph.add_hyperlink(anchor=...)` and heading targets use `Document.bookmarks.add`. The converter owns heading slugs and unresolved-target diagnostics. The library owns hyperlink XML and external relationships.
@@ -34,6 +35,8 @@ The public theme API implements the requirement that explicit Markdown font over
 The public drawing API exposes read/write `InlineShape.description` and `InlineShape.title` properties. Markdown image labels become plain-text descriptions and optional image titles are preserved. Empty alt text stays empty without marking the image as decorative. Metadata belongs to each placed image. The library owns the drawing XML, and production code uses only its public properties.
 
 Word represents lists with paragraph numbering. `Document.add_list` creates an independent sequence using template numbering. The converter keeps one handle per Markdown list and uses its first marker as the starting number. `ListInstance.apply_continuation` makes a separate Word paragraph unnumbered and preserves its text alignment. The fork copies numbering definitions for each sequence because Word can otherwise share counters across interleaved lists. Original template definitions are preserved. Markdown list identity, item boundaries, and nesting remain in converter models. No custom source directives are required.
+
+Task markers create clickable Word check box content controls through `Paragraph.add_checkbox`. The fork owns the content control XML and exposes the checked state. The converter removes the Markdown marker, adds the control, and leaves list text and nested content editable.
 
 Native footnotes use `Document.add_footnote`, `Document.footnotes`, and `Run.footnote_ids`. Note paragraphs and hyperlinks use public story APIs. The converter performs no XML writes for note creation.
 

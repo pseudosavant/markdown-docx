@@ -346,7 +346,7 @@ The current release supports:
 - Markdown links with formatted labels and optional titles, plus bare URL links
 - Fenced and indented code blocks
 - Blockquotes containing paragraphs, headings, lists, code blocks, tables, images, and nested quotes
-- Ordered and unordered lists, including mixed nesting and rich item content
+- Ordered and unordered lists, including mixed nesting, rich item content, and task checkboxes
 - Pipe tables with inline text formatting
 - Local and remote inline images
 - Standalone images with width and alignment metadata
@@ -355,7 +355,6 @@ The following syntax is intentionally unsupported:
 
 - Raw HTML and non-reserved HTML comments
 - Horizontal rules
-- Task lists
 - Images inside table cells
 - Arbitrary Markdown extensions
 
@@ -364,6 +363,13 @@ Links such as `[link text](https://example.com)` and bare URLs become native, cl
 Use `~~deleted~~` for strikethrough, `x^2^` for superscript, and `H~2~O` for subscript. Setext headings use `===` for level one and `---` for level two on the next line. Indent code by four spaces to create a code block.
 
 List items can contain paragraphs, headings, code blocks, blockquotes, tables, and images. Indent each nested block under its list item. Only the first item paragraph receives a number or bullet. Later paragraphs and blocks align with its text. A table in a list item keeps that indentation through the public ps-python-docx APIs.
+
+Task items use `- [ ]` or `- [x]` at the start of a list item. They render as clickable Word check box content controls, with checked state preserved. Task items can mix with ordinary list items and retain formatted text and nested content. An ordered item can also start with a task marker, which keeps its number and adds a check box.
+
+```markdown
+- [ ] Review the draft
+- [x] Send the **approved** version
+```
 
 Blockquotes can contain the same editable block content and can nest using additional `>` markers. Heading bookmarks and list numbering work within quotes. The configured Quote paragraph style controls quoted paragraphs, while other nested blocks retain their own styles and gain the quote indentation.
 
@@ -475,9 +481,9 @@ uvx --refresh --from . markdown-docx sample\showcase.md sample\showcase.docx --f
 
 ## Design and compatibility
 
-Both development installs and published wheels use `ps-python-docx==1.3.8` from PyPI. It retains the `docx` import package and replaces the upstream `python-docx` distribution. Use `uv sync --locked --all-groups` and `uv run markdown-docx` when working from source. CI and the release workflow test a clean wheel installation from PyPI.
+Both development installs and published wheels use `ps-python-docx==1.3.9` from PyPI. It retains the `docx` import package and replaces the upstream `python-docx` distribution. Use `uv sync --locked --all-groups` and `uv run markdown-docx` when working from source. CI and the release workflow test a clean wheel installation from PyPI.
 
-Production code uses only the public `docx` APIs provided by `ps-python-docx` 1.3.8. Native hyperlinks, image descriptions and titles, theme fonts, style references, linked styles, and document defaults use public library APIs. `src/markdown_docx/hyperlinks.py` applies Markdown styling through the public hyperlink API. Tests enforce the public API boundary and inspect saved image metadata, hyperlinks, theme data, style inheritance, and effective font selection. See [public API capabilities](docs/public-api-capabilities.md) for the decision record.
+Production code uses only the public `docx` APIs provided by `ps-python-docx` 1.3.9. Native hyperlinks, clickable check boxes, image descriptions and titles, theme fonts, style references, linked styles, and document defaults use public library APIs. `src/markdown_docx/hyperlinks.py` applies Markdown styling through the public hyperlink API. Tests enforce the public API boundary and inspect saved image metadata, hyperlinks, theme data, style inheritance, and effective font selection. See [public API capabilities](docs/public-api-capabilities.md) for the decision record.
 
 The visual CI job also renders font regression documents through LibreOffice using installed Liberation fonts. It verifies the fonts recorded in the PDF, then changes only the theme and checks that the rendered fonts follow it. To run the same check through installed Microsoft Word with Aptos and Aptos Display on Windows:
 

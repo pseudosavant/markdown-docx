@@ -151,7 +151,7 @@ def render_docx(
                     if block.list_id not in lists:
                         lists[block.list_id] = document.add_list(styles[block.depth], start=block.start)
                     sequence = lists[block.list_id]
-                    if block.continuation:
+                    if block.continuation or (block.task_checked is not None and block.list_kind == "unordered"):
                         sequence.apply_continuation(paragraph)
                     else:
                         sequence.apply(paragraph)
@@ -166,6 +166,9 @@ def render_docx(
                         line=block.line,
                         input_path=model.source_name,
                     ) from exc
+                if block.task_checked is not None:
+                    paragraph.add_checkbox(block.task_checked)
+                    paragraph.add_run(" ")
                 _render_fragments(
                     paragraph,
                     block.fragments,

@@ -14,7 +14,7 @@ from mdit_py_plugins.superscript import superscript_plugin
 from markdown_docx.bookmarks import resolve_heading_links
 from markdown_docx.errors import ParseError, UnsupportedFeatureError
 from markdown_docx.footnotes import consume_footnote, validate_footnotes
-from markdown_docx.markdown_body import is_standalone_image, is_task_item, parse_inline
+from markdown_docx.markdown_body import consume_task_marker, is_standalone_image, parse_inline
 from markdown_docx.metadata import (
     default_document_options,
     parse_document_options,
@@ -381,9 +381,8 @@ def _consume_list(
             token = tokens[index]
             if token.type == "paragraph_open":
                 paragraph, index = _consume_paragraph(tokens, index, input_path)
-                if is_task_item(paragraph.fragments):
-                    _unsupported("Task list syntax is not supported.", token, input_path)
-                if is_standalone_image(paragraph.fragments):
+                task_checked = consume_task_marker(paragraph.fragments) if not paragraph_seen else None
+                if task_checked is None and is_standalone_image(paragraph.fragments):
                     image = next(fragment for fragment in paragraph.fragments if fragment.kind == "image")
                     image_content = ImageBlock(
                         line=paragraph.line,
@@ -407,6 +406,7 @@ def _consume_list(
                         item_id=item_id,
                         start=start,
                         continuation=paragraph_seen,
+                        task_checked=task_checked,
                     )
                 )
                 paragraph_seen = True

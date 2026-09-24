@@ -254,6 +254,14 @@ A paragraph separates the next list from the previous sequence.
 
 2. Numbering continues after the nested blocks.
 
+## Clickable task lists
+
+- [ ] Review the draft and follow [the checklist](https://example.com/checklist).
+- [x] Approve the **finished** document.
+- Plain list items can sit alongside tasks.
+
+1. [ ] A numbered task keeps its number and gains a check box.
+
 <!-- markdown-docx
 section:
   page_size: a4

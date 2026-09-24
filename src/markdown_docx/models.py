@@ -141,6 +141,7 @@ class ListParagraphBlock:
     start: int
     continuation: bool = False
     quote_depth: int = 0
+    task_checked: bool | None = None
 
 
 @dataclass(slots=True)

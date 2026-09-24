@@ -158,13 +158,21 @@ def is_standalone_image(fragments: list[InlineFragment]) -> bool:
     return len(meaningful) == 1 and meaningful[0].kind == "image"
 
 
-def is_task_item(fragments: list[InlineFragment]) -> bool:
+def consume_task_marker(fragments: list[InlineFragment]) -> bool | None:
+    """Remove a leading task marker and return its checked state, if present."""
     for fragment in fragments:
         if fragment.kind == "text" and fragment.text:
-            return TASK_PATTERN.match(fragment.text) is not None
+            match = TASK_PATTERN.match(fragment.text)
+            if match is None:
+                return None
+            checked = fragment.text[1].lower() == "x"
+            fragment.text = fragment.text[match.end() :]
+            if not fragment.text:
+                fragments.remove(fragment)
+            return checked
         if fragment.kind != "break":
-            return False
-    return False
+            return None
+    return None
 
 
 def _contains_note(token: Token) -> bool:

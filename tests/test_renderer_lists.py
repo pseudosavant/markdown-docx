@@ -146,3 +146,28 @@ def test_list_item_can_start_with_a_table_and_link_to_its_nested_heading(tmp_pat
     assert document.paragraphs[2].style.name == "Heading 2"
     assert document.paragraphs[2].paragraph_format.left_indent == Inches(0.25)
     assert document.paragraphs[0].hyperlinks[0].fragment
+
+
+def test_task_list_uses_clickable_word_checkboxes(tmp_path: Path) -> None:
+    source = "- [ ] Buy **milk**\n- [x] Pay bill\n- Plain item\n\n1. [X] Numbered task\n"
+    model = parse_document(source, input_path=tmp_path / "input.md", source_name="input.md")
+    output = tmp_path / "tasks.docx"
+    render_docx(model, output, template_path=None, base_dir=tmp_path, allow_remote_images=False)
+    paragraphs = Document(output).paragraphs
+    assert [paragraph.text for paragraph in paragraphs] == [
+        " Buy milk",
+        " Pay bill",
+        "Plain item",
+        " Numbered task",
+    ]
+    assert [len(paragraph.checkboxes) for paragraph in paragraphs] == [1, 1, 0, 1]
+    assert [paragraph.checkboxes[0].checked for paragraph in (paragraphs[0], paragraphs[1], paragraphs[3])] == [
+        False,
+        True,
+        True,
+    ]
+    assert paragraphs[0]._p.pPr.numPr.numId.val == 0
+    assert paragraphs[1]._p.pPr.numPr.numId.val == 0
+    assert paragraphs[2]._p.pPr.numPr.numId.val != 0
+    assert paragraphs[3]._p.pPr.numPr.numId.val != 0
+    assert any(run.bold for run in paragraphs[0].runs if run.text == "milk")
