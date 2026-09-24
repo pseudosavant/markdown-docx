@@ -63,8 +63,8 @@ Body with `code`.
 """,
     )
     document = Document(output)
-    assert document.styles["Normal"].font.name == "Arial"
-    assert document.styles["Heading 1"].font.name == "Arial"
+    assert document.styles["Normal"].font.name is None
+    assert document.styles["Heading 1"].font.name is None
     assert document.styles["Code Block"].font.name == "Cascadia Mono"
     assert next(run for run in document.paragraphs[1].runs if run.text == "code").font.name == "Cascadia Mono"
 

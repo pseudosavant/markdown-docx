@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import base64
+from importlib import metadata
 from io import BytesIO
 from pathlib import Path
 from zipfile import ZipFile
 
+import pytest
 from docx import Document
 from docx.enum.section import WD_ORIENT, WD_SECTION
 from docx.enum.style import WD_STYLE_TYPE
@@ -22,7 +24,7 @@ def package_parts(path: Path) -> set[str]:
         return set(archive.namelist())
 
 
-def test_python_docx_120_public_api_capability_matrix(tmp_path: Path) -> None:
+def test_ps_python_docx_130_public_api_capability_matrix(tmp_path: Path) -> None:
     source = tmp_path / "source.docx"
     output = tmp_path / "output.docx"
     document = Document()
@@ -34,7 +36,12 @@ def test_python_docx_120_public_api_capability_matrix(tmp_path: Path) -> None:
     assert paragraph_styles
     assert table_styles
     assert document.styles["Normal"].type == WD_STYLE_TYPE.PARAGRAPH
-    document.styles["Normal"].font.name = "Aptos"
+    document.theme_fonts.major_latin = "Aptos Display"
+    document.theme_fonts.minor_latin = "Aptos"
+    document.styles.default_font.theme_font = "minor"
+    document.styles["Normal"].font.theme_font = "minor"
+    document.styles["Heading 1"].font.theme_font = "major"
+    document.styles["Heading 1"].linked_style.font.theme_font = "major"
 
     first_section = document.sections[0]
     first_section.top_margin = Inches(0.8)
@@ -70,7 +77,12 @@ def test_python_docx_120_public_api_capability_matrix(tmp_path: Path) -> None:
     assert "word/numbering.xml" in source_parts
     assert source_parts <= output_parts
     assert len(reopened.sections) == 2
-    assert reopened.styles["Normal"].font.name == "Aptos"
+    assert reopened.styles["Normal"].font.name is None
+    assert reopened.styles["Normal"].font.theme_font == "minor"
+    assert reopened.theme_fonts.major_latin == "Aptos Display"
+    assert reopened.theme_fonts.minor_latin == "Aptos"
+    assert reopened.styles.default_font.theme_font == "minor"
+    assert reopened.styles["Heading 1"].linked_style.font.theme_font == "major"
     assert len(reopened.tables) == 1
     assert len(reopened.inline_shapes) == 1
 
@@ -80,3 +92,9 @@ def test_unsupported_authoring_capabilities_are_not_public() -> None:
     shape = Document().add_picture(BytesIO(PNG_1X1))
     assert not hasattr(shape, "alt_text")
     assert not hasattr(shape, "description")
+
+
+def test_only_the_fork_distribution_provides_docx() -> None:
+    assert metadata.version("ps-python-docx") == "1.3.0"
+    with pytest.raises(metadata.PackageNotFoundError):
+        metadata.distribution("python-docx")

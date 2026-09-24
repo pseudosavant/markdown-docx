@@ -139,7 +139,7 @@ Document metadata sets document-wide defaults:
 | `orientation` | Select portrait or landscape orientation |
 | `margins` | Set the top, right, bottom, and left margins |
 | `styles` | Map Markdown constructs to Word style names |
-| `fonts` | Set body, heading, and monospace fonts |
+| `fonts` | Set theme body and heading fonts, plus a fixed monospace font |
 
 Content directives control the following block:
 
@@ -169,8 +169,8 @@ document:
     bottom: 0.75in
     left: 0.75in
   fonts:
-    body: Calibri
-    headings: Calibri
+    body: Aptos
+    headings: Aptos Display
     monospace: Consolas
 -->
 
@@ -182,6 +182,12 @@ This remains ordinary Markdown.
 Named page sizes are `letter`, `legal`, and `a4`. Custom page sizes use nominal portrait dimensions. Their width must not exceed their height. Lengths accept `in`, `cm`, `mm`, and `pt`. Margins must leave a positive usable page area.
 
 The `styles` mapping assigns Word paragraph and table styles to semantic Markdown constructs. Ordered and unordered list styles are arrays, with one Word style for each supported nesting depth.
+
+`fonts.body` and `fonts.headings` set the document theme's Latin body and heading fonts. Word's theme font settings show these choices. Mapped paragraph styles and their linked character styles inherit from the theme, so a later theme font change updates existing text and new paragraphs. Font names are not applied to individual body or heading runs. Body overrides also update the default paragraph style and default run font reference. Omitted body or heading overrides preserve that part of the template theme and its styles.
+
+`fonts.monospace` stays explicit for inline code and code blocks because Word has no monospace theme font slot. Templates must use distinct styles for simultaneously overridden body, heading, and code roles. Conflicting mappings report `template_font_style_conflict`. A template without a theme receives the packaged theme when body or heading overrides are requested. A malformed theme reports `template_theme_invalid`.
+
+Theme colors, effects, East Asian fonts, complex script fonts, and supplemental script mappings are preserved. These overrides do not embed or install fonts. Word may substitute fonts that are unavailable on the rendering machine.
 
 ### Sections and page breaks
 
@@ -329,7 +335,7 @@ Read the [**project documentation**](https://example.com/docs "Read the guide").
 Contact [the team](mailto:team@example.com).
 ```
 
-The source alt text for images remains meaningful Markdown content, but `python-docx` 1.2.0 has no public API for embedding it in a Word drawing. A rendered document containing images reports `image_alt_text_not_embedded` in its warning list.
+The source alt text for images remains meaningful Markdown content, but `ps-python-docx` 1.3.0 has no public API for embedding it in a Word drawing. A rendered document containing images reports `image_alt_text_not_embedded` in its warning list.
 
 ## Automation and safety
 
@@ -432,7 +438,18 @@ uvx --refresh --from . markdown-docx sample\showcase.md sample\showcase.docx --f
 
 ## Design and compatibility
 
-Production code uses documented public `python-docx` APIs with one isolated exception. `src/markdown_docx/hyperlinks.py` creates native hyperlink OOXML because `python-docx` 1.2.0 has no public hyperlink creation API. Run formatting, styles, relationship registration, and document saving use library APIs. Replace this helper when upstream supports hyperlink creation. Tests enforce the boundary and inspect generated package XML read-only. See [public API capabilities](docs/public-api-capabilities.md) for the complete decision record.
+Development checkouts temporarily resolve `ps-python-docx` from the exact Git commit in `tool.uv.sources`. Use `uv sync --locked --all-groups` and `uv run markdown-docx` when working from source. The wheel declares `ps-python-docx==1.3.0` as a normal PyPI dependency. Publish that fork release before releasing this version of markdown-docx, then remove the source override and regenerate `uv.lock`. The release workflow tests a clean wheel installation from PyPI before publishing.
+
+Production code uses the public `docx` APIs provided by `ps-python-docx` 1.3.0. Theme fonts, style references, linked styles, and document defaults use public library APIs. The only OOXML exception is `src/markdown_docx/hyperlinks.py` for native hyperlink creation. Replace that helper when a supported creation API becomes available. Tests enforce this boundary and inspect saved theme data, style inheritance, and effective font selection. See [public API capabilities](docs/public-api-capabilities.md) for the decision record.
+
+The visual CI job also renders font regression documents through LibreOffice using installed Liberation fonts. It verifies the fonts recorded in the PDF, then changes only the theme and checks that the rendered fonts follow it. To run the same check through installed Microsoft Word with Aptos and Aptos Display on Windows:
+
+```powershell
+$env:MARKDOWN_DOCX_FONT_RENDERER="word"
+uv run pytest tests/test_font_rendering.py
+```
+
+This optional check uses `uvx office-export` and requires the named fonts to be available to Word. A substituted font fails the test.
 
 Word is the primary compatibility target. LibreOffice Writer is used as a visual smoke-test engine. Differences in pagination or font metrics can occur between layout engines.
 

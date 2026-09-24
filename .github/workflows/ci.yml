@@ -76,12 +76,20 @@ jobs:
           enable-cache: true
 
       - name: Install LibreOffice and Poppler
-        run: sudo apt-get update && sudo apt-get install -y libreoffice-writer poppler-utils
+        run: sudo apt-get update && sudo apt-get install -y libreoffice-writer poppler-utils fonts-liberation
+
+      - name: Install locked test dependencies
+        run: uv sync --locked --all-groups
+
+      - name: Verify rendered theme fonts and theme changes
+        env:
+          MARKDOWN_DOCX_FONT_RENDERER: libreoffice
+        run: uv run pytest tests/test_font_rendering.py
 
       - name: Render showcase DOCX
         run: |
           mkdir -p .visual
-          uvx --from . markdown-docx sample/showcase.md .visual/showcase.docx
+          uv run --locked markdown-docx sample/showcase.md .visual/showcase.docx
 
       - name: Convert showcase to PDF
         run: libreoffice --headless --convert-to pdf --outdir .visual .visual/showcase.docx
@@ -115,7 +123,8 @@ jobs:
         shell: bash
         run: |
           python -m venv .wheel-smoke
-          .wheel-smoke/bin/python -m pip install dist/*.whl
+          uv export --locked --no-dev --no-emit-project --no-hashes --format requirements-txt -o .wheel-requirements.txt
+          uv pip install --python .wheel-smoke/bin/python -r .wheel-requirements.txt dist/*.whl
           .wheel-smoke/bin/markdown-docx --version
           .wheel-smoke/bin/markdown-docx --syntax --json
           .wheel-smoke/bin/python scripts/smoke_skill.py
