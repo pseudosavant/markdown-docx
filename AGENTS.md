@@ -10,7 +10,7 @@ This repository contains `markdown-docx`, a strict Python CLI that converts cons
 
 ## Core rules
 
-- Use only supported public `docx` APIs from `ps-python-docx` 1.3.4 in production code.
+- Use only supported public `docx` APIs from `ps-python-docx` 1.3.5 in production code.
 - Direct OOXML changes and private library APIs are not allowed in production code. Theme fonts, native hyperlinks, and image descriptions must use the fork's public APIs.
 - Preserve normal Markdown meaning and keep Word metadata in invisible reserved HTML comments.
 - Reject unsupported behavior with stable, line-aware diagnostics.

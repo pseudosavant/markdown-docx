@@ -89,7 +89,7 @@ class ImageOptions:
 
 @dataclass(slots=True)
 class InlineFragment:
-    kind: Literal["text", "break", "image", "link_open", "link_close"]
+    kind: Literal["text", "break", "image", "link_open", "link_close", "footnote"]
     text: str | None = None
     src: str | None = None
     alt: str | None = None
@@ -99,6 +99,8 @@ class InlineFragment:
     href: str | None = None
     title: str | None = None
     anchor: str | None = None
+    footnote_label: str | None = None
+    reference_line: int | None = None
 
 
 @dataclass(slots=True)
@@ -181,9 +183,17 @@ Block: TypeAlias = (
 
 
 @dataclass(slots=True)
+class FootnoteDefinition:
+    label: str
+    line: int
+    paragraphs: list[ParagraphBlock]
+
+
+@dataclass(slots=True)
 class DocumentModel:
     input_path: Path | None
     source_name: str
     options: DocumentOptions
     blocks: list[Block]
     warnings: list[str] = field(default_factory=list)
+    footnotes: dict[str, FootnoteDefinition] = field(default_factory=dict)

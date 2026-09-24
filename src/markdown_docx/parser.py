@@ -7,9 +7,11 @@ from typing import Any, NoReturn, cast
 
 from markdown_it import MarkdownIt
 from markdown_it.token import Token
+from mdit_py_plugins.footnote import footnote_plugin
 
 from markdown_docx.bookmarks import resolve_heading_links
 from markdown_docx.errors import ParseError, UnsupportedFeatureError
+from markdown_docx.footnotes import consume_footnote, validate_footnotes
 from markdown_docx.markdown_body import is_standalone_image, is_task_item, parse_inline
 from markdown_docx.metadata import (
     default_document_options,
@@ -25,6 +27,7 @@ from markdown_docx.models import (
     CodeBlock,
     DocumentModel,
     DocumentOptions,
+    FootnoteDefinition,
     HeadingBlock,
     ImageBlock,
     ImageOptions,
@@ -56,6 +59,7 @@ def parse_document(
     source_name: str,
 ) -> DocumentModel:
     markdown = MarkdownIt("commonmark", {"html": True}).enable("table")
+    markdown.use(footnote_plugin, inline=False, move_to_end=False, always_match_refs=True)
     try:
         tokens = markdown.parse(source)
     except Exception as exc:
@@ -69,6 +73,7 @@ def parse_document(
     source_lines = source.splitlines()
     options = default_document_options()
     blocks: list[Block] = []
+    footnotes: dict[str, FootnoteDefinition] = {}
     document_seen = False
     visible_seen = False
     pending: Directive | None = None
@@ -133,7 +138,17 @@ def parse_document(
             pending = None
 
         token_type = token.type
-        if token_type == "paragraph_open":
+        if token_type == "footnote_reference_open":
+            note, index = consume_footnote(tokens, index, input_path=input_label)
+            if note.label in footnotes:
+                raise ParseError(
+                    "footnote_duplicate",
+                    f"Footnote {note.label!r} is defined more than once.",
+                    line=note.line,
+                    input_path=input_label,
+                )
+            footnotes[note.label] = note
+        elif token_type == "paragraph_open":
             paragraph, index = _consume_paragraph(tokens, index, input_label)
             if is_standalone_image(paragraph.fragments):
                 image = next(fragment for fragment in paragraph.fragments if fragment.kind == "image")
@@ -184,8 +199,13 @@ def parse_document(
             input_path=input_label,
             metadata_kind=pending.kind,
         )
-    resolve_heading_links(blocks, input_path=input_label)
-    return DocumentModel(input_path=input_path, source_name=source_name, options=options, blocks=blocks)
+    validate_footnotes(blocks, footnotes, input_path=input_label)
+    resolve_heading_links(
+        [*blocks, *(p for note in footnotes.values() for p in note.paragraphs)], input_path=input_label
+    )
+    return DocumentModel(
+        input_path=input_path, source_name=source_name, options=options, blocks=blocks, footnotes=footnotes
+    )
 
 
 def _parse_directive(token: Token, *, input_path: str) -> Directive | None:
@@ -267,7 +287,7 @@ def _consume_blockquote(tokens: list[Token], index: int, input_path: str) -> tup
     index += 1
     while index < len(tokens) and tokens[index].type != "blockquote_close":
         if tokens[index].type != "paragraph_open":
-            _unsupported("Blockquotes may contain paragraphs only in 0.3.5.", tokens[index], input_path)
+            _unsupported("Blockquotes may contain paragraphs only in 0.3.6.", tokens[index], input_path)
         paragraph, index = _consume_paragraph(tokens, index, input_path)
         if any(fragment.kind == "image" for fragment in paragraph.fragments):
             _unsupported("Images nested in blockquotes are not supported.", opening, input_path)

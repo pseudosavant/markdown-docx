@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.6
+
+- Convert named Markdown footnotes into native editable Word notes through ps-python-docx 1.3.5.
+- Preserve formatted text, multiple paragraphs, and links within notes.
+- Validate labels, repeated references, and unsupported note content with source lines.
+
 ## 0.3.5
 
 - Generate native Word bookmarks for headings and support internal Markdown links such as `[Details](#details)`.

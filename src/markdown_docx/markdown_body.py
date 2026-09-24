@@ -7,7 +7,6 @@ from markdown_it.token import Token
 from markdown_docx.errors import UnsupportedFeatureError
 from markdown_docx.models import InlineFragment
 
-FOOTNOTE_PATTERN = re.compile(r"\[\^[^\]]+\]")
 TASK_PATTERN = re.compile(r"^\[[ xX]\]\s")
 
 
@@ -29,16 +28,19 @@ def parse_inline(token: Token, *, line: int, input_path: str | None) -> list[Inl
     bold = False
     italic = False
     children = token.children or []
-    for index, child in enumerate(children):
+    in_link = False
+    reference_line = line
+    for child in children:
         child_type = child.type
         if child_type == "text":
-            _reject_footnote_text(child.content, line=line, input_path=input_path)
             _append_text(fragments, child.content, bold=bold, italic=italic)
         elif child_type == "code_inline":
             fragments.append(InlineFragment(kind="text", text=child.content, bold=bold, italic=italic, code=True))
         elif child_type == "softbreak":
+            reference_line += 1
             _append_text(fragments, " ", bold=bold, italic=italic)
         elif child_type == "hardbreak":
+            reference_line += 1
             fragments.append(InlineFragment(kind="break", bold=bold, italic=italic))
         elif child_type == "strong_open":
             bold = True
@@ -49,6 +51,13 @@ def parse_inline(token: Token, *, line: int, input_path: str | None) -> list[Inl
         elif child_type == "em_close":
             italic = False
         elif child_type == "image":
+            if _contains_note(child):
+                raise UnsupportedFeatureError(
+                    "Footnote references in image labels are unsupported.",
+                    code="footnote_reference_unsupported",
+                    line=reference_line,
+                    input_path=input_path,
+                )
             raw_source = child.attrGet("src")
             raw_title = child.attrGet("title")
             fragments.append(
@@ -62,17 +71,7 @@ def parse_inline(token: Token, *, line: int, input_path: str | None) -> list[Inl
                 )
             )
         elif child_type == "link_open":
-            if (
-                index + 1 < len(children)
-                and children[index + 1].content.startswith("^")
-                and FOOTNOTE_PATTERN.search(token.content)
-            ):
-                raise UnsupportedFeatureError(
-                    "Footnote syntax is not supported.",
-                    line=line,
-                    input_path=input_path,
-                    code="unsupported_markdown",
-                )
+            in_link = True
             raw_href = child.attrGet("href")
             href = raw_href if isinstance(raw_href, str) else ""
             if not href:
@@ -85,7 +84,19 @@ def parse_inline(token: Token, *, line: int, input_path: str | None) -> list[Inl
             title = raw_title if isinstance(raw_title, str) else None
             fragments.append(InlineFragment(kind="link_open", href=href, title=title))
         elif child_type == "link_close":
+            in_link = False
             fragments.append(InlineFragment(kind="link_close"))
+        elif child_type == "footnote_ref":
+            if in_link:
+                raise UnsupportedFeatureError(
+                    "Footnote references inside link labels are unsupported.",
+                    code="footnote_reference_unsupported",
+                    line=reference_line,
+                    input_path=input_path,
+                )
+            fragments.append(
+                InlineFragment(kind="footnote", footnote_label=child.meta["label"], reference_line=reference_line)
+            )
         elif child_type == "html_inline":
             raise UnsupportedFeatureError(
                 "Raw inline HTML is not supported.",
@@ -117,14 +128,8 @@ def is_task_item(fragments: list[InlineFragment]) -> bool:
     return False
 
 
-def _reject_footnote_text(text: str, *, line: int, input_path: str | None) -> None:
-    if FOOTNOTE_PATTERN.search(text):
-        raise UnsupportedFeatureError(
-            "Footnote syntax is not supported.",
-            line=line,
-            input_path=input_path,
-            code="unsupported_markdown",
-        )
+def _contains_note(token: Token) -> bool:
+    return token.type == "footnote_ref" or any(_contains_note(child) for child in token.children or [])
 
 
 def _append_text(

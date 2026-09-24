@@ -22,6 +22,7 @@ from markdown_docx.images import ImageLoader, rendered_width
 from markdown_docx.models import (
     CodeBlock,
     DocumentModel,
+    FootnoteDefinition,
     HeadingBlock,
     ImageBlock,
     InlineFragment,
@@ -94,6 +95,8 @@ def render_docx(
                 _render_fragments(
                     paragraph,
                     block.fragments,
+                    document=document,
+                    footnotes=model.footnotes,
                     image_loader=image_loader,
                     bookmarks=bookmarks,
                     settings=current_settings,
@@ -109,6 +112,8 @@ def render_docx(
                 _render_fragments(
                     paragraph,
                     block.fragments,
+                    document=document,
+                    footnotes=model.footnotes,
                     image_loader=image_loader,
                     bookmarks=bookmarks,
                     settings=current_settings,
@@ -148,6 +153,8 @@ def render_docx(
                 _render_fragments(
                     paragraph,
                     block.fragments,
+                    document=document,
+                    footnotes=model.footnotes,
                     image_loader=image_loader,
                     bookmarks=bookmarks,
                     settings=current_settings,
@@ -231,6 +238,8 @@ def _render_fragments(
     paragraph: Paragraph,
     fragments: list[InlineFragment],
     *,
+    document: DocumentObject,
+    footnotes: dict[str, FootnoteDefinition],
     image_loader: ImageLoader,
     bookmarks: dict[str, str],
     settings: SectionSettings,
@@ -245,6 +254,7 @@ def _render_fragments(
                 paragraph,
                 fragment.href or "",
                 fragment.title,
+                styles=document.styles,
                 anchor=bookmarks[fragment.anchor] if fragment.anchor is not None else None,
             )
             continue
@@ -252,7 +262,24 @@ def _render_fragments(
             hyperlink = None
             continue
         container = hyperlink or paragraph
-        if fragment.kind == "break":
+        if fragment.kind == "footnote":
+            definition = footnotes[fragment.footnote_label or ""]
+            note = document.add_footnote(paragraph.add_run())
+            for index, content in enumerate(definition.paragraphs):
+                note_paragraph = note.paragraphs[0] if index == 0 else note.add_paragraph()
+                _render_fragments(
+                    note_paragraph,
+                    content.fragments,
+                    document=document,
+                    footnotes={},
+                    image_loader=image_loader,
+                    bookmarks=bookmarks,
+                    settings=settings,
+                    monospace=monospace,
+                    line=content.line,
+                    input_path=input_path,
+                )
+        elif fragment.kind == "break":
             container.add_run().add_break(WD_BREAK.LINE)
         elif fragment.kind == "image":
             asset = image_loader.load(fragment.src or "", line=line, input_path=input_path)
@@ -307,6 +334,8 @@ def _render_table(
             _render_fragments(
                 paragraph,
                 cell_data.fragments,
+                document=document,
+                footnotes=model.footnotes,
                 image_loader=image_loader,
                 bookmarks=bookmarks,
                 settings=settings,

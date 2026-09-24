@@ -323,3 +323,11 @@ section: default
 The final section returns to letter paper, portrait orientation, inch-based margins, and the document-level style and font mappings.
 
 The generated file remains a normal editable `.docx`. Headings, paragraphs, quotes, code, lists, tables, hyperlinks, images, page breaks, and sections are all native Word content. Read the [project documentation](https://github.com/pseudosavant/markdown-docx) for more examples.
+
+## Native footnotes
+
+This statement has an editable Word footnote[^source].
+
+[^source]: A **formatted** explanation with a [reference link](https://example.com).
+
+    A second paragraph keeps the note content together.

@@ -154,7 +154,6 @@ def test_image_metadata_uses_plain_label_text_and_optional_title(label: str, exp
         ("---\n", "unsupported_markdown"),
         ("    indented\n", "unsupported_markdown"),
         ("- [ ] task\n", "unsupported_markdown"),
-        ("Text[^1]\n\n[^1]: Note\n", "unsupported_markdown"),
     ],
 )
 def test_unsupported_markdown_is_rejected(source: str, code: str) -> None:
