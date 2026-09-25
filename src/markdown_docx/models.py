@@ -127,6 +127,7 @@ class HeadingBlock:
 class CodeBlock:
     line: int
     text: str
+    language: str | None = None
     quote_depth: int = 0
 
 

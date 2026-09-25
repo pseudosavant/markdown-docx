@@ -821,7 +821,7 @@ wheels = [
 
 [[package]]
 name = "markdown-docx"
-version = "0.3.13"
+version = "0.3.14"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },
@@ -831,6 +831,7 @@ dependencies = [
     { name = "packaging" },
     { name = "pillow" },
     { name = "ps-python-docx" },
+    { name = "pygments" },
     { name = "pyyaml" },
 ]
 
@@ -841,6 +842,7 @@ dev = [
     { name = "pytest" },
     { name = "ruff" },
     { name = "twine" },
+    { name = "types-pygments" },
     { name = "types-pyyaml" },
 ]
 
@@ -853,6 +855,7 @@ requires-dist = [
     { name = "packaging", specifier = ">=24.0" },
     { name = "pillow", specifier = ">=10.0,<13" },
     { name = "ps-python-docx", specifier = "==1.3.10" },
+    { name = "pygments", specifier = "==2.21.0" },
     { name = "pyyaml", specifier = ">=6.0,<7" },
 ]
 
@@ -863,6 +866,7 @@ dev = [
     { name = "pytest", specifier = ">=8.0" },
     { name = "ruff", specifier = "==0.16.1" },
     { name = "twine", specifier = ">=6.1" },
+    { name = "types-pygments", specifier = ">=2.21.0.20260819" },
     { name = "types-pyyaml", specifier = ">=6.0" },
 ]
 
@@ -1409,6 +1413,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/92/3c/58f808a359700f39a967dffede33efeac809262c03303fa3eec6afff8f49/twine-7.0.0.tar.gz", hash = "sha256:85cdb29c518efef867360ae4acd4b0dfd61c8654a22fca08e6f8539f05022177", size = 215032, upload_time = "2026-07-27T15:59:00.825Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/96/08/ddcdc06225eaad6de0e48e1002b06d919dbde20582d0662c7af51308e5d6/twine-7.0.0-py3-none-any.whl", hash = "sha256:b854164df26db268af05f49aa5c0344b10e27a494343ff05b1e0bad3b135f5a7", size = 43204, upload_time = "2026-07-27T15:58:59.26Z" },
+]
+
+[[package]]
+name = "types-pygments"
+version = "2.21.0.20260819"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/84/2b/b3e929c39fb056f0e44560acbe53a7c3f28f428af5362d043642d80b31ec/types_pygments-2.21.0.20260819.tar.gz", hash = "sha256:68e0cb27115b08b681c843e30a153b5d9850c048e1158623ada36ccd4cf7e89b", size = 21509, upload_time = "2026-08-19T02:47:15.827Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d9/a5/10a2de06b53a36f4334391fcf292b51877cbc71d3f6eac353e7b87a0a17e/types_pygments-2.21.0.20260819-py3-none-any.whl", hash = "sha256:85e216770d616db6a7e96fb70c2de9d9f283b746c37edb7768ce645bdbcaddb2", size = 29099, upload_time = "2026-08-19T02:47:14.81Z" },
 ]
 
 [[package]]

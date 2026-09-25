@@ -195,6 +195,14 @@ target = source.with_suffix(".docx")
 print(target)
 ```
 
+The CSS fence demonstrates a second recognized language.
+
+```css
+.showcase {
+  color: #2464a4
+}
+```
+
 ## Indented code
 
     source = "showcase.md"

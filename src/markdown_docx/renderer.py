@@ -17,6 +17,7 @@ from docx.shared import Emu, Inches
 from docx.styles.style import ParagraphStyle
 from docx.text.paragraph import Paragraph
 
+from markdown_docx.code_highlighting import render_code_block
 from markdown_docx.errors import MarkdownDocxError, RenderError
 from markdown_docx.hyperlinks import HyperlinkWriter
 from markdown_docx.images import ImageLoader, rendered_width
@@ -139,7 +140,7 @@ def render_docx(
                     style=model.options.styles.code_block,
                     reusable=reusable,
                 )
-                paragraph.add_run(block.text.rstrip("\n"))
+                render_code_block(paragraph, block)
                 _apply_quote_indent(paragraph, block.quote_depth, quote_step, _style_left_indent(paragraph))
             elif isinstance(block, ThematicBreakBlock):
                 paragraph, reusable = _new_paragraph(
@@ -400,7 +401,7 @@ def _render_list_content(
     if isinstance(content, HeadingBlock):
         document.bookmarks.add(bookmarks[content.anchor], paragraph=paragraph)
     if isinstance(content, CodeBlock):
-        paragraph.add_run(content.text.rstrip("\n"))
+        render_code_block(paragraph, content)
     elif isinstance(content, ThematicBreakBlock):
         paragraph.add_horizontal_rule()
     elif isinstance(content, ImageBlock):

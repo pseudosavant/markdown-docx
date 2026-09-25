@@ -181,10 +181,10 @@ def parse_document(
             heading, index = _consume_heading(tokens, index, input_label)
             blocks.append(heading)
         elif token_type == "fence":
-            blocks.append(CodeBlock(line=line, text=token.content))
+            blocks.append(_code_block(token))
             index += 1
         elif token_type == "code_block":
-            blocks.append(CodeBlock(line=line, text=token.content))
+            blocks.append(_code_block(token))
             index += 1
         elif token_type == "blockquote_open":
             quote_blocks, index = _consume_blockquote(
@@ -326,7 +326,7 @@ def _consume_blockquote(
             heading, index = _consume_heading(tokens, index, input_path)
             blocks.append(heading)
         elif token.type in {"fence", "code_block"}:
-            blocks.append(CodeBlock(line=_token_line(token), text=token.content))
+            blocks.append(_code_block(token))
             index += 1
         elif token.type in {"bullet_list_open", "ordered_list_open"}:
             list_blocks, index = _consume_list(tokens, index, depth=list_depth, options=options, input_path=input_path)
@@ -424,7 +424,7 @@ def _consume_list(
                 paragraph_seen = True
             elif token.type in {"fence", "code_block", "heading_open", "table_open", "hr"}:
                 if token.type in {"fence", "code_block"}:
-                    code_content = CodeBlock(line=_token_line(token), text=token.content)
+                    code_content = _code_block(token)
                     index += 1
                     nested_blocks: list[ListContent] = [code_content]
                 elif token.type == "heading_open":
@@ -490,6 +490,12 @@ def _empty_list_item(
         item_id=item_id,
         start=start,
     )
+
+
+def _code_block(token: Token) -> CodeBlock:
+    info = token.info.split(maxsplit=1)
+    language = info[0] if token.type == "fence" and info else None
+    return CodeBlock(line=_token_line(token), text=token.content, language=language)
 
 
 def _consume_table(

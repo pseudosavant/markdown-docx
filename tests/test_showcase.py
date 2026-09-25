@@ -86,6 +86,7 @@ def test_showcase_covers_portable_markdown_and_metadata_features() -> None:
     assert any(isinstance(block, TableBlock) and block.quote_depth == 1 for block in model.blocks)
     assert any(isinstance(block, ImageBlock) and block.quote_depth == 1 for block in model.blocks)
     assert any(isinstance(block, CodeBlock) and 'source = "showcase.md"' in block.text for block in model.blocks)
+    assert {block.language for block in model.blocks if isinstance(block, CodeBlock)} >= {"python", "css", None}
     assert any(isinstance(block, ThematicBreakBlock) for block in model.blocks)
     assert any(
         isinstance(block, ParagraphBlock) and block.role == "blockquote" and not block.fragments
@@ -168,3 +169,7 @@ def test_showcase_renders_as_editable_native_word_content(tmp_path: Path) -> Non
     assert any(paragraph.text == "Back to Document Defaults" for paragraph in document.paragraphs)
     assert any(paragraph.hyperlinks for paragraph in document.paragraphs)
     assert any(cell.paragraphs[0].hyperlinks for table in document.tables for row in table.rows for cell in row.cells)
+    assert any(
+        paragraph.style.name == "Code Block" and any(run.font.color.rgb is not None for run in paragraph.runs)
+        for paragraph in document.paragraphs
+    )

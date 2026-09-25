@@ -125,7 +125,7 @@ The template remains unchanged. It must not contain:
 - Body images or drawings
 - Nonempty headers or footers
 
-Each configured style must exist and have the correct Word style type. Body and heading font overrides modify the mapped paragraph styles. The monospace override applies to code blocks and inline code. Sizes, colors, spacing, borders, and other typography remain owned by the template.
+Each configured style must exist and have the correct Word style type. Body and heading font overrides modify the mapped paragraph styles. The monospace override applies to code blocks and inline code. Sizes, spacing, borders, and other typography remain owned by the template. Recognized fenced code languages use Pygments token colors and emphasis.
 
 ## Customize a document
 
@@ -344,7 +344,7 @@ The current release supports:
 - Paragraphs and standard soft or hard line breaks
 - Emphasis, strong emphasis, strikethrough, superscript, subscript, and inline backtick code
 - Markdown links with formatted labels and optional titles, plus bare URL links
-- Fenced and indented code blocks
+- Fenced code blocks with syntax coloring for recognized language labels, plus plain indented code blocks
 - Thematic breaks that become native Word horizontal rules
 - Blockquotes containing paragraphs, headings, lists, code blocks, tables, images, and nested quotes
 - Ordered and unordered lists, including mixed nesting, rich item content, and task checkboxes
@@ -362,7 +362,9 @@ Links such as `[link text](https://example.com)` and bare URLs become native, cl
 
 Use `~~deleted~~` for strikethrough, `x^2^` for superscript, and `H~2~O` for subscript. Setext headings use `===` for level one and `---` for level two on the next line. Indent code by four spaces to create a code block.
 
-A thematic break such as `***` or `---` becomes an empty Word paragraph with a bottom border, matching Word's horizontal-line shortcut. It works inside quotes and list items. Fenced code language labels are accepted but currently do not add syntax coloring.
+A thematic break such as `***` or `---` becomes an empty Word paragraph with a bottom border, matching Word's horizontal-line shortcut. It works inside quotes and list items.
+
+A fenced code block labeled `python`, `css`, or another Pygments lexer alias uses the Pygments default light style. The first word after the opening fence selects the language. Colors and emphasis become editable Word run formatting. Code text, spaces, tabs, and blank lines remain intact. Unknown or missing labels and indented code blocks remain plain. No language is guessed from the code.
 
 List items can contain paragraphs, headings, code blocks, blockquotes, tables, and images. Indent each nested block under its list item. Only the first item paragraph receives a number or bullet. Later paragraphs and blocks align with its text. A table in a list item keeps that indentation through the public ps-python-docx APIs.
 
