@@ -173,3 +173,34 @@ def test_showcase_renders_as_editable_native_word_content(tmp_path: Path) -> Non
         paragraph.style.name == "Code Block" and any(run.font.color.rgb is not None for run in paragraph.runs)
         for paragraph in document.paragraphs
     )
+
+
+def test_showcase_highlighting_gallery_covers_common_languages(tmp_path: Path) -> None:
+    _, model = _showcase_model()
+    gallery_start = next(
+        index
+        for index, block in enumerate(model.blocks)
+        if isinstance(block, HeadingBlock)
+        and "".join(fragment.text or "" for fragment in block.fragments) == "Syntax Highlighting Gallery"
+    )
+    gallery_languages = [block.language for block in model.blocks[gallery_start:] if isinstance(block, CodeBlock)]
+    assert gallery_languages == [
+        "html",
+        "css",
+        "javascript",
+        "typescript",
+        "python",
+        "php",
+        "csharp",
+        "java",
+        "c",
+        "swift",
+        "go",
+        "cpp",
+        "rust",
+    ]
+    output = tmp_path / "showcase.docx"
+    render_docx(model, output, template_path=None, base_dir=SHOWCASE_PATH.parent, allow_remote_images=False)
+    code_paragraphs = [paragraph for paragraph in Document(output).paragraphs if paragraph.style.name == "Code Block"]
+    assert len(code_paragraphs) >= len(gallery_languages)
+    assert all(any(run.font.color.rgb is not None for run in paragraph.runs) for paragraph in code_paragraphs[-13:])

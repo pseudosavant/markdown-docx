@@ -426,3 +426,122 @@ Pipe-table headers repeat automatically when their table spans pages. Body rows 
 ## DOTX formatting templates
 
 The same Markdown can use a blank macro-free `.dotx` file through `--template`. Output remains an editable `.docx`, and the source template stays unchanged.
+
+<!-- markdown-docx: page-break -->
+
+# Syntax Highlighting Gallery
+
+Each code fence names a Pygments language. The colored code remains editable text in Word.
+
+## HTML
+
+```html
+<main class="card">
+  <h1>Hello, Word</h1>
+</main>
+```
+
+## CSS
+
+```css
+.card {
+  color: #2464a4;
+  padding: 1rem;
+}
+```
+
+## JavaScript
+
+```javascript
+const greet = name => `Hello, ${name}`
+console.log(greet("Word"))
+```
+
+## TypeScript
+
+```typescript
+function greet(name: string): string {
+  return `Hello, ${name}`
+}
+```
+
+## Python
+
+```python
+def greet(name: str) -> str:
+    return f"Hello, {name}"
+```
+
+## PHP
+
+```php
+<?php
+function greet(string $name): string {
+    return "Hello, " . $name;
+}
+```
+
+## C#
+
+```csharp
+class Greeter {
+    public static string Hello(string name) => $"Hello, {name}";
+}
+```
+
+## Java
+
+```java
+class Greeter {
+    static String hello(String name) {
+        return "Hello, " + name;
+    }
+}
+```
+
+<!-- markdown-docx: page-break -->
+
+## C
+
+```c
+#include <stdio.h>
+int main(void) {
+    puts("Hello, Word");
+    return 0;
+}
+```
+
+## Swift
+
+```swift
+func greet(_ name: String) -> String {
+    "Hello, \(name)"
+}
+```
+
+## Go
+
+```go
+package main
+import "fmt"
+func main() {
+    fmt.Println("Hello, Word")
+}
+```
+
+## C++
+
+```cpp
+#include <iostream>
+int main() {
+    std::cout << "Hello, Word\n";
+}
+```
+
+## Rust
+
+```rust
+fn main() {
+    println!("Hello, Word");
+}
+```
