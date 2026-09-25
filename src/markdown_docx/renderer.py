@@ -34,6 +34,7 @@ from markdown_docx.models import (
     SectionBreakBlock,
     SectionSettings,
     TableBlock,
+    ThematicBreakBlock,
 )
 from markdown_docx.styles import apply_font_overrides, validate_styles
 from markdown_docx.template import load_template
@@ -140,6 +141,14 @@ def render_docx(
                 )
                 paragraph.add_run(block.text.rstrip("\n"))
                 _apply_quote_indent(paragraph, block.quote_depth, quote_step, _style_left_indent(paragraph))
+            elif isinstance(block, ThematicBreakBlock):
+                paragraph, reusable = _new_paragraph(
+                    document,
+                    style=model.options.styles.paragraph,
+                    reusable=reusable,
+                )
+                _apply_quote_indent(paragraph, block.quote_depth, quote_step, 0)
+                paragraph.add_horizontal_rule()
             elif isinstance(block, ListParagraphBlock):
                 styles = (
                     model.options.styles.ordered_list
@@ -392,6 +401,8 @@ def _render_list_content(
         document.bookmarks.add(bookmarks[content.anchor], paragraph=paragraph)
     if isinstance(content, CodeBlock):
         paragraph.add_run(content.text.rstrip("\n"))
+    elif isinstance(content, ThematicBreakBlock):
+        paragraph.add_horizontal_rule()
     elif isinstance(content, ImageBlock):
         asset = image_loader.load(content.src, line=content.line, input_path=model.source_name)
         usable_width = settings.usable_width - item_indent - quote_step * block.quote_depth

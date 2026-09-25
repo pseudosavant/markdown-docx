@@ -148,9 +148,7 @@ def test_image_metadata_uses_plain_label_text_and_optional_title(label: str, exp
 @pytest.mark.parametrize(
     ("source", "code"),
     [
-        ("[link]()\n", "unsupported_feature"),
         ("<span>raw</span>\n", "unsupported_markdown"),
-        ("---\n", "unsupported_markdown"),
     ],
 )
 def test_unsupported_markdown_is_rejected(source: str, code: str) -> None:
@@ -198,9 +196,8 @@ def test_footnote_like_text_inside_code_is_allowed() -> None:
     assert isinstance(model.blocks[0], ParagraphBlock)
 
 
-def test_non_reserved_html_comment_is_rejected() -> None:
-    with pytest.raises(UnsupportedFeatureError):
-        parse("<!-- ordinary comment -->\n")
+def test_non_reserved_html_comment_is_ignored() -> None:
+    assert parse("<!-- ordinary comment -->\n").blocks == []
 
 
 def test_unknown_compact_directive_is_rejected() -> None:

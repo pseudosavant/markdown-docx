@@ -821,7 +821,7 @@ wheels = [
 
 [[package]]
 name = "markdown-docx"
-version = "0.3.12"
+version = "0.3.13"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },
@@ -852,7 +852,7 @@ requires-dist = [
     { name = "mdit-py-plugins", specifier = "==0.6.1" },
     { name = "packaging", specifier = ">=24.0" },
     { name = "pillow", specifier = ">=10.0,<13" },
-    { name = "ps-python-docx", specifier = "==1.3.9" },
+    { name = "ps-python-docx", specifier = "==1.3.10" },
     { name = "pyyaml", specifier = ">=6.0,<7" },
 ]
 
@@ -1152,15 +1152,15 @@ wheels = [
 
 [[package]]
 name = "ps-python-docx"
-version = "1.3.9"
+version = "1.3.10"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "lxml" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c8/5f/dd80abc1601ab248a1d95ff4cd7c9a59dd87a4d772fa1777f882c75c5830/ps_python_docx-1.3.9.tar.gz", hash = "sha256:dedc0091eb2af486eea2eb238e5780c94fd9c14d4883905cccb1b7010e1f9f2c", size = 5807560, upload_time = "2026-09-24T23:37:06.27Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e6/d6/52e86e6eb409b8667e0dafb7451d3535d518f948c0bbfc01e94d84ad13cd/ps_python_docx-1.3.10.tar.gz", hash = "sha256:3b910eb72e655fce079f6275fbd7bae34438eff976995f5f0380843b3accf100", size = 5808226, upload_time = "2026-09-25T16:26:00.323Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/80/1d/3bca1fe182aecdac0ec576a5b085c6f2428e117014819d9f37d972483010/ps_python_docx-1.3.9-py3-none-any.whl", hash = "sha256:a9bd69b44e94da31ad021690be75270374c3d41db5da39381daf9743f4c02117", size = 273471, upload_time = "2026-09-24T23:37:04.716Z" },
+    { url = "https://files.pythonhosted.org/packages/3c/bd/c25908b89fca1ea9a049931210ccb76ae5418125aed51762151bdf443b95/ps_python_docx-1.3.10-py3-none-any.whl", hash = "sha256:31409f3a721c1ffa4e3d79b40c1cdc129a3575b8b586822318ea1efbec43f330", size = 273849, upload_time = "2026-09-25T16:25:58.669Z" },
 ]
 
 [[package]]

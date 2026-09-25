@@ -14,6 +14,7 @@ from markdown_docx.models import (
     ParagraphBlock,
     SectionBreakBlock,
     TableBlock,
+    ThematicBreakBlock,
 )
 from markdown_docx.parser import parse_document
 from markdown_docx.renderer import render_docx
@@ -54,6 +55,7 @@ def test_showcase_covers_portable_markdown_and_metadata_features() -> None:
         ParagraphBlock,
         SectionBreakBlock,
         TableBlock,
+        ThematicBreakBlock,
     }
 
     headings = [block for block in model.blocks if isinstance(block, HeadingBlock)]
@@ -84,6 +86,11 @@ def test_showcase_covers_portable_markdown_and_metadata_features() -> None:
     assert any(isinstance(block, TableBlock) and block.quote_depth == 1 for block in model.blocks)
     assert any(isinstance(block, ImageBlock) and block.quote_depth == 1 for block in model.blocks)
     assert any(isinstance(block, CodeBlock) and 'source = "showcase.md"' in block.text for block in model.blocks)
+    assert any(isinstance(block, ThematicBreakBlock) for block in model.blocks)
+    assert any(
+        isinstance(block, ParagraphBlock) and block.role == "blockquote" and not block.fragments
+        for block in model.blocks
+    )
     assert any(
         "source line and continues through a soft source break" in (fragment.text or "") for fragment in text_fragments
     )

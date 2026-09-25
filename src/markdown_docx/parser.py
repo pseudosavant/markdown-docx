@@ -14,7 +14,7 @@ from mdit_py_plugins.superscript import superscript_plugin
 from markdown_docx.bookmarks import resolve_heading_links
 from markdown_docx.errors import ParseError, UnsupportedFeatureError
 from markdown_docx.footnotes import consume_footnote, validate_footnotes
-from markdown_docx.markdown_body import consume_task_marker, is_standalone_image, parse_inline
+from markdown_docx.markdown_body import consume_task_marker, is_ignorable_comment, is_standalone_image, parse_inline
 from markdown_docx.metadata import (
     default_document_options,
     parse_document_options,
@@ -43,6 +43,7 @@ from markdown_docx.models import (
     TableBlock,
     TableCell,
     TableOptions,
+    ThematicBreakBlock,
 )
 
 COMMENT_PATTERN = re.compile(r"^<!--\s*markdown-docx(?P<body>.*?)-->\s*$", re.DOTALL)
@@ -90,7 +91,10 @@ def parse_document(
         if token.type == "html_block":
             directive = _parse_directive(token, input_path=input_label)
             if directive is None:
-                _unsupported("Raw HTML and non-reserved HTML comments are not supported.", token, input_label)
+                if is_ignorable_comment(token.content):
+                    index += 1
+                    continue
+                _unsupported("Raw HTML blocks are not supported.", token, input_label)
             if pending is not None:
                 raise ParseError(
                     "metadata_placement_error",
@@ -194,7 +198,8 @@ def parse_document(
             table, index = _consume_table(tokens, index, table_options or TableOptions(), input_label)
             blocks.append(table)
         elif token_type == "hr":
-            _unsupported("Horizontal rules are not supported.", token, input_label)
+            blocks.append(ThematicBreakBlock(line=line))
+            index += 1
         elif token_type == "html_inline":
             _unsupported("Raw inline HTML is not supported.", token, input_label)
         else:
@@ -329,15 +334,22 @@ def _consume_blockquote(
         elif token.type == "table_open":
             table, index = _consume_table(tokens, index, TableOptions(), input_path)
             blocks.append(table)
+        elif token.type == "hr":
+            blocks.append(ThematicBreakBlock(line=_token_line(token)))
+            index += 1
         elif token.type == "blockquote_open":
             nested, index = _consume_blockquote(
                 tokens, index, options=options, input_path=input_path, list_depth=list_depth
             )
             blocks.extend(nested)
+        elif token.type == "html_block" and is_ignorable_comment(token.content):
+            index += 1
         else:
             _unsupported("This content type is not supported in a blockquote.", token, input_path)
     if index >= len(tokens):
         _structure_error(opening, input_path)
+    if not blocks:
+        blocks.append(ParagraphBlock(line=_token_line(opening), fragments=[], role="blockquote"))
     for block in blocks:
         if isinstance(block, (PageBreakBlock, SectionBreakBlock)):
             _structure_error(opening, input_path)
@@ -410,7 +422,7 @@ def _consume_list(
                     )
                 )
                 paragraph_seen = True
-            elif token.type in {"fence", "code_block", "heading_open", "table_open"}:
+            elif token.type in {"fence", "code_block", "heading_open", "table_open", "hr"}:
                 if token.type in {"fence", "code_block"}:
                     code_content = CodeBlock(line=_token_line(token), text=token.content)
                     index += 1
@@ -421,6 +433,9 @@ def _consume_list(
                 elif token.type == "table_open":
                     table_content, index = _consume_table(tokens, index, TableOptions(), input_path)
                     nested_blocks = [table_content]
+                else:
+                    nested_blocks = [ThematicBreakBlock(line=_token_line(token))]
+                    index += 1
                 if not paragraph_seen:
                     blocks.append(_empty_list_item(_token_line(token), kind, depth, list_id, item_id, start))
                     paragraph_seen = True
@@ -436,7 +451,10 @@ def _consume_list(
                     if isinstance(quoted, (ListParagraphBlock, ListContentBlock)):
                         blocks.append(quoted)
                     else:
-                        if not isinstance(quoted, (ParagraphBlock, HeadingBlock, CodeBlock, TableBlock, ImageBlock)):
+                        if not isinstance(
+                            quoted,
+                            (ParagraphBlock, HeadingBlock, CodeBlock, TableBlock, ImageBlock, ThematicBreakBlock),
+                        ):
                             _structure_error(token, input_path)
                         blocks.append(
                             ListContentBlock(
@@ -446,10 +464,14 @@ def _consume_list(
             elif token.type in {"bullet_list_open", "ordered_list_open"}:
                 nested, index = _consume_list(tokens, index, depth=depth + 1, options=options, input_path=input_path)
                 blocks.extend(nested)
+            elif token.type == "html_block" and is_ignorable_comment(token.content):
+                index += 1
             else:
                 _unsupported("This content type is not supported inside list items.", token, input_path)
-        if index >= len(tokens) or not paragraph_seen:
+        if index >= len(tokens):
             _structure_error(item_open, input_path)
+        if not paragraph_seen:
+            blocks.append(_empty_list_item(_token_line(item_open), kind, depth, list_id, item_id, start))
         index += 1
     if index >= len(tokens):
         _structure_error(opening, input_path)

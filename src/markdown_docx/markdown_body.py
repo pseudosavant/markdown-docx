@@ -8,6 +8,14 @@ from markdown_docx.errors import UnsupportedFeatureError
 from markdown_docx.models import InlineFragment
 
 TASK_PATTERN = re.compile(r"^\[[ xX]\]\s")
+COMMENT_ONLY_PATTERN = re.compile(r"^(?:<!--(?:(?!-->).)*-->\s*)+$", re.DOTALL)
+RESERVED_COMMENT_PATTERN = re.compile(r"<!--\s*markdown-docx\b")
+
+
+def is_ignorable_comment(content: str) -> bool:
+    """Return whether HTML content consists only of ordinary comments."""
+    stripped = content.strip()
+    return COMMENT_ONLY_PATTERN.fullmatch(stripped) is not None and RESERVED_COMMENT_PATTERN.search(stripped) is None
 
 
 def _image_alt_text(tokens: list[Token]) -> str:
@@ -110,21 +118,17 @@ def parse_inline(token: Token, *, line: int, input_path: str | None) -> list[Inl
                 )
             )
         elif child_type == "link_open":
-            in_link = True
             raw_href = child.attrGet("href")
             href = raw_href if isinstance(raw_href, str) else ""
-            if not href:
-                raise UnsupportedFeatureError(
-                    "Links require a non-empty destination.",
-                    line=line,
-                    input_path=input_path,
-                )
+            in_link = bool(href)
             raw_title = child.attrGet("title")
             title = raw_title if isinstance(raw_title, str) else None
-            fragments.append(InlineFragment(kind="link_open", href=href, title=title))
+            if in_link:
+                fragments.append(InlineFragment(kind="link_open", href=href, title=title))
         elif child_type == "link_close":
+            if in_link:
+                fragments.append(InlineFragment(kind="link_close"))
             in_link = False
-            fragments.append(InlineFragment(kind="link_close"))
         elif child_type == "footnote_ref":
             if in_link:
                 raise UnsupportedFeatureError(
@@ -137,6 +141,8 @@ def parse_inline(token: Token, *, line: int, input_path: str | None) -> list[Inl
                 InlineFragment(kind="footnote", footnote_label=child.meta["label"], reference_line=reference_line)
             )
         elif child_type == "html_inline":
+            if is_ignorable_comment(child.content):
+                continue
             raise UnsupportedFeatureError(
                 "Raw inline HTML is not supported.",
                 line=line,

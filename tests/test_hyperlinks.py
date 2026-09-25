@@ -11,7 +11,6 @@ from docx.shared import RGBColor
 from docx.text.hyperlink import Hyperlink
 
 from markdown_docx.cli import main
-from markdown_docx.errors import UnsupportedFeatureError
 from markdown_docx.models import ParagraphBlock
 from markdown_docx.parser import parse_document
 from markdown_docx.renderer import render_docx
@@ -128,15 +127,6 @@ def test_linked_inline_image_stays_clickable(tmp_path: Path, png_file: Path) -> 
     with ZipFile(output) as archive:
         body = ET.fromstring(archive.read("word/document.xml"))
     assert body.find(".//w:hyperlink/w:r/w:drawing", NS) is not None
-
-
-@pytest.mark.parametrize("destination", [""])
-def test_unsupported_destinations_are_line_aware(destination: str) -> None:
-    with pytest.raises(UnsupportedFeatureError) as excinfo:
-        parse_document(f"Intro\n\n[link]({destination})", input_path=None, source_name="input.md")
-    assert excinfo.value.context.code == "unsupported_feature"
-    assert excinfo.value.context.line == 3
-    assert excinfo.value.context.input_path == "input.md"
 
 
 def test_existing_hyperlink_style_is_preserved(tmp_path: Path) -> None:

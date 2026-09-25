@@ -262,6 +262,24 @@ A paragraph separates the next list from the previous sequence.
 
 1. [ ] A numbered task keeps its number and gains a check box.
 
+## Thematic breaks and empty blocks
+
+A horizontal rule below uses Word's standard paragraph border.
+
+***
+
+The empty [link label]() stays visible without a destination.
+
+<!-- An ordinary HTML comment stays invisible in Word. -->
+
+- A list item before an empty one.
+-
+- A list item after an empty one.
+
+>
+
+The preceding quote is an empty Word paragraph with the Quote style.
+
 <!-- markdown-docx
 section:
   page_size: a4

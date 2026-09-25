@@ -5,7 +5,7 @@ from __future__ import annotations
 from markdown_it.token import Token
 
 from markdown_docx.errors import ParseError
-from markdown_docx.markdown_body import parse_inline
+from markdown_docx.markdown_body import is_ignorable_comment, parse_inline
 from markdown_docx.models import (
     Block,
     FootnoteDefinition,
@@ -25,6 +25,9 @@ def consume_footnote(tokens: list[Token], index: int, *, input_path: str) -> tup
     while index < len(tokens) and tokens[index].type != "footnote_reference_close":
         token = tokens[index]
         content_line = token.map[0] + 1 if token.map else line
+        if token.type == "html_block" and is_ignorable_comment(token.content):
+            index += 1
+            continue
         if (
             token.type != "paragraph_open"
             or index + 2 >= len(tokens)

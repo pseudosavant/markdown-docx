@@ -131,6 +131,12 @@ class CodeBlock:
 
 
 @dataclass(slots=True)
+class ThematicBreakBlock:
+    line: int
+    quote_depth: int = 0
+
+
+@dataclass(slots=True)
 class ListParagraphBlock:
     line: int
     fragments: list[InlineFragment]
@@ -180,7 +186,7 @@ class SectionBreakBlock:
     settings: SectionSettings
 
 
-ListContent: TypeAlias = ParagraphBlock | HeadingBlock | CodeBlock | TableBlock | ImageBlock
+ListContent: TypeAlias = ParagraphBlock | HeadingBlock | CodeBlock | TableBlock | ImageBlock | ThematicBreakBlock
 
 
 @dataclass(slots=True)
@@ -197,6 +203,7 @@ Block: TypeAlias = (
     ParagraphBlock
     | HeadingBlock
     | CodeBlock
+    | ThematicBreakBlock
     | ListParagraphBlock
     | TableBlock
     | ImageBlock

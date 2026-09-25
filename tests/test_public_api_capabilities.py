@@ -23,7 +23,7 @@ def package_parts(path: Path) -> set[str]:
         return set(archive.namelist())
 
 
-def test_ps_python_docx_138_public_api_capability_matrix(tmp_path: Path) -> None:
+def test_ps_python_docx_public_api_capability_matrix(tmp_path: Path) -> None:
     source = tmp_path / "source.docx"
     output = tmp_path / "output.docx"
     document = Document()
@@ -106,6 +106,6 @@ def test_ps_python_docx_138_public_api_capability_matrix(tmp_path: Path) -> None
 
 
 def test_only_the_fork_distribution_provides_docx() -> None:
-    assert metadata.version("ps-python-docx") == "1.3.9"
+    assert metadata.version("ps-python-docx") == "1.3.10"
     with pytest.raises(metadata.PackageNotFoundError):
         metadata.distribution("python-docx")
