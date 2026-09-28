@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.15
+
+- Render images with empty destinations as visible placeholders such as `[Image: Network diagram]` instead of failing conversion.
+- Support empty image destinations in paragraphs, lists, tables, footnotes, and linked images. Keep missing nonempty destinations as errors.
+- Provide native nine-level Word numbering in the bundled template. Same-kind nested lists share a multilevel sequence when they start at one.
+- Preserve existing custom template numbering behavior and reject lists deeper than nine levels with a source line.
+- Expand the showcase and managed skill guidance for both features.
+
 ## 0.3.8
 
 - Accept blank macro-free DOTX templates for rendering, inspection, and style listing.

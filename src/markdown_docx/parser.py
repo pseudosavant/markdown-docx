@@ -364,15 +364,16 @@ def _consume_list(
     depth: int,
     options: DocumentOptions,
     input_path: str,
+    parent_list_id: int | None = None,
 ) -> tuple[list[Block], int]:
     opening = tokens[index]
     ordered = opening.type == "ordered_list_open"
     kind: ListKind = "ordered" if ordered else "unordered"
     configured_styles = options.styles.ordered_list if ordered else options.styles.unordered_list
-    if depth >= len(configured_styles):
+    if depth >= min(len(configured_styles), 9):
         raise ParseError(
             "list_depth_unsupported",
-            f"{kind} list depth {depth + 1} exceeds the {len(configured_styles)} configured styles.",
+            f"{kind} list depth {depth + 1} exceeds the supported {min(len(configured_styles), 9)} levels.",
             line=_token_line(opening),
             input_path=input_path,
         )
@@ -394,7 +395,11 @@ def _consume_list(
             if token.type == "paragraph_open":
                 paragraph, index = _consume_paragraph(tokens, index, input_path)
                 task_checked = consume_task_marker(paragraph.fragments) if not paragraph_seen else None
-                if task_checked is None and is_standalone_image(paragraph.fragments):
+                if (
+                    task_checked is None
+                    and is_standalone_image(paragraph.fragments)
+                    and any(fragment.kind == "image" and fragment.src for fragment in paragraph.fragments)
+                ):
                     image = next(fragment for fragment in paragraph.fragments if fragment.kind == "image")
                     image_content = ImageBlock(
                         line=paragraph.line,
@@ -404,7 +409,9 @@ def _consume_list(
                         options=ImageOptions(),
                     )
                     if not paragraph_seen:
-                        blocks.append(_empty_list_item(paragraph.line, kind, depth, list_id, item_id, start))
+                        blocks.append(
+                            _empty_list_item(paragraph.line, kind, depth, list_id, item_id, start, parent_list_id)
+                        )
                         paragraph_seen = True
                     blocks.append(ListContentBlock(paragraph.line, image_content, list_id, item_id, depth))
                     continue
@@ -417,6 +424,7 @@ def _consume_list(
                         list_id=list_id,
                         item_id=item_id,
                         start=start,
+                        parent_list_id=parent_list_id,
                         continuation=paragraph_seen,
                         task_checked=task_checked,
                     )
@@ -437,7 +445,9 @@ def _consume_list(
                     nested_blocks = [ThematicBreakBlock(line=_token_line(token))]
                     index += 1
                 if not paragraph_seen:
-                    blocks.append(_empty_list_item(_token_line(token), kind, depth, list_id, item_id, start))
+                    blocks.append(
+                        _empty_list_item(_token_line(token), kind, depth, list_id, item_id, start, parent_list_id)
+                    )
                     paragraph_seen = True
                 blocks.extend(ListContentBlock(block.line, block, list_id, item_id, depth) for block in nested_blocks)
             elif token.type == "blockquote_open":
@@ -445,7 +455,9 @@ def _consume_list(
                     tokens, index, options=options, input_path=input_path, list_depth=depth + 1
                 )
                 if not paragraph_seen:
-                    blocks.append(_empty_list_item(_token_line(token), kind, depth, list_id, item_id, start))
+                    blocks.append(
+                        _empty_list_item(_token_line(token), kind, depth, list_id, item_id, start, parent_list_id)
+                    )
                     paragraph_seen = True
                 for quoted in quote_blocks:
                     if isinstance(quoted, (ListParagraphBlock, ListContentBlock)):
@@ -462,7 +474,9 @@ def _consume_list(
                             )
                         )
             elif token.type in {"bullet_list_open", "ordered_list_open"}:
-                nested, index = _consume_list(tokens, index, depth=depth + 1, options=options, input_path=input_path)
+                nested, index = _consume_list(
+                    tokens, index, depth=depth + 1, options=options, input_path=input_path, parent_list_id=list_id
+                )
                 blocks.extend(nested)
             elif token.type == "html_block" and is_ignorable_comment(token.content):
                 index += 1
@@ -471,7 +485,9 @@ def _consume_list(
         if index >= len(tokens):
             _structure_error(item_open, input_path)
         if not paragraph_seen:
-            blocks.append(_empty_list_item(_token_line(item_open), kind, depth, list_id, item_id, start))
+            blocks.append(
+                _empty_list_item(_token_line(item_open), kind, depth, list_id, item_id, start, parent_list_id)
+            )
         index += 1
     if index >= len(tokens):
         _structure_error(opening, input_path)
@@ -479,7 +495,7 @@ def _consume_list(
 
 
 def _empty_list_item(
-    line: int, kind: ListKind, depth: int, list_id: int, item_id: int, start: int
+    line: int, kind: ListKind, depth: int, list_id: int, item_id: int, start: int, parent_list_id: int | None
 ) -> ListParagraphBlock:
     return ListParagraphBlock(
         line=line,
@@ -489,6 +505,7 @@ def _empty_list_item(
         list_id=list_id,
         item_id=item_id,
         start=start,
+        parent_list_id=parent_list_id,
     )
 
 
@@ -541,7 +558,7 @@ def _consume_table(
             if alignment not in {"left", "center", "right"}:
                 alignment = "left"
             fragments = parse_inline(tokens[index + 1], line=line, input_path=input_path)
-            if any(fragment.kind == "image" for fragment in fragments):
+            if any(fragment.kind == "image" and fragment.src for fragment in fragments):
                 _unsupported("Images inside table cells are not supported.", token, input_path)
             current_row.append(TableCell(fragments=fragments, alignment=cast(Alignment, alignment)))
             expected_close = "th_close" if token.type == "th_open" else "td_close"

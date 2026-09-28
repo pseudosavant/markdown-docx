@@ -37,8 +37,8 @@ def test_showcase_covers_portable_markdown_and_metadata_features() -> None:
     assert model.options.styles.headings == {level: f"Heading {level}" for level in range(1, 7)}
     assert model.options.styles.blockquote == "Quote"
     assert model.options.styles.code_block == "Code Block"
-    assert model.options.styles.ordered_list == ["List Number", "List Number 2", "List Number 3"]
-    assert model.options.styles.unordered_list == ["List Bullet", "List Bullet 2", "List Bullet 3"]
+    assert model.options.styles.ordered_list == ["List Number", *(f"List Number {n}" for n in range(2, 10))]
+    assert model.options.styles.unordered_list == ["List Bullet", *(f"List Bullet {n}" for n in range(2, 10))]
     assert model.options.styles.table == "Table Grid"
     assert model.options.fonts.body == "Aptos"
     assert model.options.fonts.headings == "Aptos Display"
@@ -104,12 +104,7 @@ def test_showcase_covers_portable_markdown_and_metadata_features() -> None:
         ImageBlock,
     }
     assert {(block.list_kind, block.depth) for block in list_blocks} == {
-        ("ordered", 0),
-        ("ordered", 1),
-        ("ordered", 2),
-        ("unordered", 0),
-        ("unordered", 1),
-        ("unordered", 2),
+        (kind, depth) for kind in ("ordered", "unordered") for depth in range(9)
     }
 
     tables = [block for block in model.blocks if isinstance(block, TableBlock)]

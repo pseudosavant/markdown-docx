@@ -127,3 +127,35 @@ def test_missing_and_remote_disabled_images_have_stable_errors(tmp_path: Path) -
     with pytest.raises(AssetError) as remote_error:
         render_docx(remote, tmp_path / "remote.docx", template_path=None, base_dir=tmp_path, allow_remote_images=False)
     assert remote_error.value.context.code == "image_download_failed"
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [
+        ("![Network diagram]()", "[Image: Network diagram]"),
+        ("Before ![Network diagram]() after.", "Before [Image: Network diagram] after."),
+        ("![]()", "[Image]"),
+        ("[![Network diagram]()](https://example.com)", "[Image: Network diagram]"),
+    ],
+)
+def test_empty_image_destination_renders_visible_placeholder(tmp_path: Path, source: str, expected: str) -> None:
+    model = parse_document(source, input_path=tmp_path / "input.md", source_name="input.md")
+    output = tmp_path / "placeholder.docx"
+    render_docx(model, output, template_path=None, base_dir=tmp_path, allow_remote_images=False)
+    document = Document(output)
+    assert document.paragraphs[0].text == expected
+    assert not document.inline_shapes
+    if source.startswith("[!["):
+        assert document.paragraphs[0].hyperlinks[0].text == expected
+
+
+def test_empty_image_destination_in_table_and_footnote(tmp_path: Path) -> None:
+    source = "| Diagram |\n| --- |\n| ![Network diagram]() |\n\nNote[^one].\n\n[^one]: ![Missing chart]()\n"
+    model = parse_document(source, input_path=tmp_path / "input.md", source_name="input.md")
+    output = tmp_path / "nested-placeholders.docx"
+    render_docx(model, output, template_path=None, base_dir=tmp_path, allow_remote_images=False)
+    document = Document(output)
+    assert document.tables[0].cell(1, 0).text == "[Image: Network diagram]"
+    with ZipFile(output) as package:
+        footnotes_part = next(name for name in package.namelist() if name.startswith("word/footnotes"))
+        assert b"[Image: Missing chart]" in package.read(footnotes_part)

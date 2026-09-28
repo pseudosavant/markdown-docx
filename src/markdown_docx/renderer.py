@@ -61,7 +61,14 @@ def render_docx(
     allow_remote_images: bool,
 ) -> dict[str, Any]:
     document = load_template(template_path)
-    validate_styles(document, model.options)
+    used_list_styles = {
+        (model.options.styles.ordered_list if block.list_kind == "ordered" else model.options.styles.unordered_list)[
+            block.depth
+        ]
+        for block in model.blocks
+        if isinstance(block, ListParagraphBlock)
+    }
+    validate_styles(document, model.options, used_list_styles)
     apply_font_overrides(document, model.options)
     current_settings = model.options.section
     _apply_section_settings(document.sections[0], current_settings)
@@ -72,6 +79,8 @@ def render_docx(
     reusable = _reusable_initial_paragraph(document)
     warnings = list(model.warnings)
     lists: dict[int, ListInstance] = {}
+    list_levels: dict[int, int] = {}
+    list_kinds: dict[int, str] = {}
     list_item_indents: dict[int, int] = {}
     bookmarks: dict[str, str] = {}
     reserved_names = {bookmark.name.casefold() for bookmark in document.bookmarks}
@@ -159,13 +168,29 @@ def render_docx(
                 paragraph, reusable = _new_paragraph(document, style=styles[block.depth], reusable=reusable)
                 try:
                     if block.list_id not in lists:
-                        lists[block.list_id] = document.add_list(styles[block.depth], start=block.start)
+                        parent_id = block.parent_list_id
+                        parent = lists.get(parent_id) if parent_id is not None else None
+                        if (
+                            template_path is None
+                            and parent_id is not None
+                            and parent is not None
+                            and list_kinds[parent_id] == block.list_kind
+                            and block.depth in parent.levels
+                            and block.start == 1
+                        ):
+                            lists[block.list_id] = parent
+                            list_levels[block.list_id] = block.depth
+                        else:
+                            lists[block.list_id] = document.add_list(styles[block.depth], start=block.start)
+                            list_levels[block.list_id] = lists[block.list_id].default_level
+                        list_kinds[block.list_id] = block.list_kind
                     sequence = lists[block.list_id]
+                    level = list_levels[block.list_id]
                     if block.continuation or (block.task_checked is not None and block.list_kind == "unordered"):
-                        sequence.apply_continuation(paragraph)
+                        sequence.apply_continuation(paragraph, level=level)
                     else:
-                        sequence.apply(paragraph)
-                    indent = sequence.continuation_left_indent(paragraph)
+                        sequence.apply(paragraph, level=level)
+                    indent = sequence.continuation_left_indent(paragraph, level=level)
                     list_item_indents.setdefault(block.item_id, int(indent or 0))
                     if block.quote_depth:
                         _apply_quote_indent(paragraph, block.quote_depth, quote_step, int(indent or 0))
@@ -196,6 +221,7 @@ def render_docx(
                     document,
                     block,
                     sequence=lists[block.list_id],
+                    level=list_levels[block.list_id],
                     item_indent=list_item_indents[block.item_id],
                     model=model,
                     settings=current_settings,
@@ -221,6 +247,9 @@ def render_docx(
                 )
                 paragraph.alignment = PARAGRAPH_ALIGNMENT[block.options.alignment]
                 _apply_quote_indent(paragraph, block.quote_depth, quote_step, _style_left_indent(paragraph))
+                if not block.src:
+                    paragraph.add_run(_image_placeholder(block.alt))
+                    continue
                 asset = image_loader.load(block.src, line=block.line, input_path=model.source_name)
                 width = rendered_width(
                     asset,
@@ -325,6 +354,16 @@ def _render_fragments(
         elif fragment.kind == "break":
             container.add_run().add_break(WD_BREAK.LINE)
         elif fragment.kind == "image":
+            if not fragment.src:
+                run = container.add_run(_image_placeholder(fragment.alt or ""))
+                run.bold = fragment.bold or None
+                run.italic = fragment.italic or None
+                run.font.strike = fragment.strike or None
+                if fragment.superscript:
+                    run.font.superscript = True
+                elif fragment.subscript:
+                    run.font.subscript = True
+                continue
             asset = image_loader.load(fragment.src or "", line=line, input_path=input_path)
             width = min(asset.natural_width, settings.usable_width)
             run = container.add_run()
@@ -357,6 +396,10 @@ def _style_left_indent(paragraph: Paragraph) -> int:
     return int(value) if value is not None else 0
 
 
+def _image_placeholder(alt: str) -> str:
+    return f"[Image: {alt}]" if alt else "[Image]"
+
+
 def _apply_quote_indent(paragraph: Paragraph, depth: int, step: int, base: int) -> None:
     if depth:
         paragraph.paragraph_format.left_indent = Emu(base + step * depth)
@@ -367,6 +410,7 @@ def _render_list_content(
     block: ListContentBlock,
     *,
     sequence: ListInstance,
+    level: int,
     item_indent: int,
     model: DocumentModel,
     settings: SectionSettings,
@@ -396,7 +440,7 @@ def _render_list_content(
     else:
         style = model.options.styles.paragraph
     paragraph = document.add_paragraph(style=style)
-    sequence.apply_continuation(paragraph)
+    sequence.apply_continuation(paragraph, level=level)
     _apply_quote_indent(paragraph, block.quote_depth, quote_step, item_indent)
     if isinstance(content, HeadingBlock):
         document.bookmarks.add(bookmarks[content.anchor], paragraph=paragraph)
@@ -405,6 +449,9 @@ def _render_list_content(
     elif isinstance(content, ThematicBreakBlock):
         paragraph.add_horizontal_rule()
     elif isinstance(content, ImageBlock):
+        if not content.src:
+            paragraph.add_run(_image_placeholder(content.alt))
+            return
         asset = image_loader.load(content.src, line=content.line, input_path=model.source_name)
         usable_width = settings.usable_width - item_indent - quote_step * block.quote_depth
         width = rendered_width(

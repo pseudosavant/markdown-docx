@@ -251,7 +251,7 @@ Pipe-table header rows repeat automatically when a table spans pages in Word. Bo
 
 ## Footnotes
 
-Footnotes use the named `[^label]` and `[^label]: note text` extension from mdit-py-plugins. Labels are case-sensitive. Forward references, formatted text, links, hard breaks, and multiple note paragraphs are supported. Indent later paragraphs by four spaces. Each label must be defined and referenced exactly once. Empty notes are allowed. Undefined labels, duplicate definitions, unused definitions, and repeated references produce line-aware errors. Notes cannot contain images, lists, tables, headings, code blocks, metadata, or nested notes. References in image labels are rejected. References render as native Word notes with automatic numbering. No custom directive is required.
+Footnotes use the named `[^label]` and `[^label]: note text` extension from mdit-py-plugins. Labels are case-sensitive. Forward references, formatted text, links, hard breaks, and multiple note paragraphs are supported. Indent later paragraphs by four spaces. Each label must be defined and referenced exactly once. Empty notes are allowed. Undefined labels, duplicate definitions, unused definitions, and repeated references produce line-aware errors. Notes cannot contain embedded images, lists, tables, headings, code blocks, metadata, or nested notes. References in image labels are rejected. References render as native Word notes with automatic numbering. No custom directive is required.
 
 ```markdown
 A statement with a source[^source].
@@ -288,6 +288,8 @@ HTTP and HTTPS images use timeouts, a 25 MiB download limit, content-type valida
 uvx markdown-docx report.md --no-remote-images
 ```
 
+An image with an empty destination renders as visible text. For example, `![Network diagram]()` becomes `[Image: Network diagram]`. Empty alt text becomes `[Image]`. This works in paragraphs, lists, tables, footnotes, and linked image labels. A nonempty destination that points to a missing image remains an error.
+
 ### Lists
 
 Ordered and unordered lists may be mixed and nested. Each list type maps to one Word paragraph style per nesting depth:
@@ -298,17 +300,29 @@ styles:
     - List Number
     - List Number 2
     - List Number 3
+    - List Number 4
+    - List Number 5
+    - List Number 6
+    - List Number 7
+    - List Number 8
+    - List Number 9
   unordered_list:
     - List Bullet
     - List Bullet 2
     - List Bullet 3
+    - List Bullet 4
+    - List Bullet 5
+    - List Bullet 6
+    - List Bullet 7
+    - List Bullet 8
+    - List Bullet 9
 ```
 
-A list deeper than the configured style array is an error. Each mapped style must reference a native numbering definition in the template, directly or through an inherited paragraph style.
+A list deeper than nine levels or the configured style array is an error. The bundled template uses native nine-level Word numbering definitions. Each mapped style must reference a native numbering definition in the template, directly or through an inherited paragraph style. Custom templates can map up to nine styles for each kind of list.
 
-Ordered lists begin at the number written on their first item, including `0`. Subsequent markers follow normal Markdown meaning and do not change the sequence. Each separate list restarts independently. Use its first marker to continue from a chosen number after intervening content.
+Ordered lists begin at the number written on their first item, including `0`. Subsequent markers follow normal Markdown meaning and do not change the sequence. Each separate top-level list restarts independently. Use its first marker to continue from a chosen number after intervening content.
 
-Indented paragraphs within an item become separate, unnumbered Word paragraphs aligned with the item text. Nested lists get their own sequence. Returning to the outer list continues its numbering.
+Indented paragraphs within an item become separate, unnumbered Word paragraphs aligned with the item text. With the bundled template, same-kind nested lists that start at one share the parent's native multilevel numbering. Mixed list kinds and nested lists with another starting number use separate numbering instances. Custom templates retain their own numbering definitions. Returning to the outer list continues its numbering.
 
 ```markdown
 3. Third item
@@ -334,8 +348,8 @@ The packaged template provides these default style mappings. Supplied templates 
 | Headings | `Heading 1` through `Heading 6` |
 | Blockquote | `Quote` |
 | Code block | `Code Block` |
-| Ordered lists | `List Number` through `List Number 3` |
-| Unordered lists | `List Bullet` through `List Bullet 3` |
+| Ordered lists | `List Number` through `List Number 9` |
+| Unordered lists | `List Bullet` through `List Bullet 9` |
 | Table | `Table Grid` |
 
 The current release supports:
@@ -355,7 +369,7 @@ The current release supports:
 The following syntax is intentionally unsupported:
 
 - Raw HTML tags and blocks
-- Images inside table cells
+- Embedded images inside table cells
 - Arbitrary Markdown extensions
 
 Links such as `[link text](https://example.com)` and bare URLs become native, clickable, editable Word hyperlinks. Labels preserve bold, italic, strikethrough, superscript, subscript, inline code, and line breaks. Optional Markdown titles become Word tooltips. Links work in paragraphs, headings, blockquotes, lists, and table cells. Reference links, angle-bracket autolinks, email links, relative file links, and linked inline images are supported wherever their content is allowed. Destinations are stored without fetching them. Relative file links are resolved by Word relative to the output document. An empty destination such as `[label]()` keeps its formatted label as ordinary text, without a hyperlink. Every heading creates a bookmark. Link to its slug with `[Details](#details)`, including before the heading. Slugs use plain heading text and image labels, normalized to NFC and lowercase. Punctuation is removed except underscores and hyphens. Whitespace becomes a hyphen. Empty slugs use `section`. Duplicates receive `-1`, `-2`, and later available suffixes in document order. Unicode and percent-encoded fragments are supported. Fragments must match the slug exactly. Missing targets produce `internal_link_unresolved` with the source line. Word bookmark names are generated separately to fit Word constraints.

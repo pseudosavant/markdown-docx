@@ -41,10 +41,12 @@ def consume_footnote(tokens: list[Token], index: int, *, input_path: str) -> tup
                 input_path=input_path,
             )
         fragments = parse_inline(tokens[index + 1], line=content_line, input_path=input_path)
-        if any(fragment.kind in {"footnote", "image"} for fragment in fragments):
+        if any(
+            fragment.kind == "footnote" or (fragment.kind == "image" and bool(fragment.src)) for fragment in fragments
+        ):
             raise ParseError(
                 "footnote_content_unsupported",
-                "Images and nested footnote references are unsupported inside footnotes.",
+                "Embedded images and nested footnote references are unsupported inside footnotes.",
                 line=content_line,
                 input_path=input_path,
             )

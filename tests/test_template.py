@@ -87,6 +87,20 @@ def test_template_theme_and_numbering_parts_are_preserved(
         assert len(updated) == len(original) + 2
 
 
+def test_deep_list_requires_matching_styles_in_custom_template(
+    tmp_path: Path, blank_template_factory: Callable[[str], Path]
+) -> None:
+    template = blank_template_factory("three-levels.docx")
+    source = "- One\n   - Two\n      - Three\n         - Four\n"
+    model = parse_document(source, input_path=tmp_path / "input.md", source_name="input.md")
+    with pytest.raises(TemplateError) as excinfo:
+        render_docx(
+            model, tmp_path / "output.docx", template_path=template, base_dir=tmp_path, allow_remote_images=False
+        )
+    assert excinfo.value.context.code == "template_style_missing"
+    assert "List Bullet 4" in excinfo.value.context.message
+
+
 def test_invalid_dotx_is_rejected(tmp_path: Path) -> None:
     path = tmp_path / "template.dotx"
     path.write_bytes(b"not a package")

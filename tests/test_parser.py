@@ -207,10 +207,26 @@ def test_unknown_compact_directive_is_rejected() -> None:
 
 
 def test_list_depth_uses_configured_style_count() -> None:
-    source = "1. one\n   1. two\n      1. three\n         1. four\n"
+    source = "".join(f"{'   ' * depth}1. Level {depth + 1}\n" for depth in range(10))
     with pytest.raises(ParseError) as excinfo:
         parse(source)
     assert excinfo.value.context.code == "list_depth_unsupported"
+    assert excinfo.value.context.line == 10
+
+
+def test_custom_list_style_count_limits_depth() -> None:
+    source = (
+        "<!-- markdown-docx\n"
+        "document:\n"
+        "  styles:\n"
+        "    ordered_list: [List Number, List Number 2]\n"
+        "-->\n\n"
+        "1. One\n   1. Two\n      1. Three\n"
+    )
+    with pytest.raises(ParseError) as excinfo:
+        parse(source)
+    assert excinfo.value.context.code == "list_depth_unsupported"
+    assert excinfo.value.context.line == 9
 
 
 @pytest.mark.parametrize("start", [0, 1, 3, 999999999])

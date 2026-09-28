@@ -18,8 +18,8 @@ document:
       6: Heading 6
     blockquote: Quote
     code_block: Code Block
-    ordered_list: [List Number, List Number 2, List Number 3]
-    unordered_list: [List Bullet, List Bullet 2, List Bullet 3]
+    ordered_list: [List Number, List Number 2, List Number 3, List Number 4, List Number 5, List Number 6, List Number 7, List Number 8, List Number 9]
+    unordered_list: [List Bullet, List Bullet 2, List Bullet 3, List Bullet 4, List Bullet 5, List Bullet 6, List Bullet 7, List Bullet 8, List Bullet 9]
     table: Table Grid
   fonts:
     body: Aptos
@@ -242,6 +242,28 @@ A paragraph separates the next list from the previous sequence.
    - Unordered child
       - Unordered grandchild
 
+The next two lists use all nine native Word levels.
+
+1. Ordered level one
+   1. Ordered level two
+      1. Ordered level three
+         1. Ordered level four
+            1. Ordered level five
+               1. Ordered level six
+                  1. Ordered level seven
+                     1. Ordered level eight
+                        1. Ordered level nine
+
+- Bullet level one
+   - Bullet level two
+      - Bullet level three
+         - Bullet level four
+            - Bullet level five
+               - Bullet level six
+                  - Bullet level seven
+                     - Bullet level eight
+                        - Bullet level nine
+
 ## Rich list items
 
 1. This item contains several editable blocks beneath one Word list number.
@@ -320,6 +342,10 @@ table:
 The next illustration has no image metadata. Its large natural width is clamped to the usable page width by the renderer.
 
 ![Natural-width dog cameo used to demonstrate page clamping](assets/dog-trio-cameo.png)
+
+## Empty image destinations
+
+An image with no destination becomes a visible placeholder: ![Network diagram](). An image with no alt text becomes ![](). The placeholder also works inside [a linked image label](https://example.com) such as [![Linked diagram]()](https://example.com).
 
 <!-- markdown-docx
 section:

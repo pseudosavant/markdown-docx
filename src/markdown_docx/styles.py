@@ -8,14 +8,15 @@ from markdown_docx.models import DocumentOptions
 from markdown_docx.theme_fonts import apply_theme_fonts
 
 
-def validate_styles(document: DocumentObject, options: DocumentOptions) -> None:
+def validate_styles(document: DocumentObject, options: DocumentOptions, used_list_styles: set[str]) -> None:
     paragraph_names = {
         options.styles.paragraph,
         options.styles.blockquote,
         options.styles.code_block,
         *options.styles.headings.values(),
-        *options.styles.ordered_list,
-        *options.styles.unordered_list,
+        *options.styles.ordered_list[:3],
+        *options.styles.unordered_list[:3],
+        *used_list_styles,
     }
     for name in sorted(paragraph_names):
         _require_style(document, name, WD_STYLE_TYPE.PARAGRAPH)

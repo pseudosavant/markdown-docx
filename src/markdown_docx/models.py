@@ -53,8 +53,12 @@ class StyleMappings:
     headings: dict[int, str] = field(default_factory=lambda: {level: f"Heading {level}" for level in range(1, 7)})
     blockquote: str = "Quote"
     code_block: str = "Code Block"
-    ordered_list: list[str] = field(default_factory=lambda: ["List Number", "List Number 2", "List Number 3"])
-    unordered_list: list[str] = field(default_factory=lambda: ["List Bullet", "List Bullet 2", "List Bullet 3"])
+    ordered_list: list[str] = field(
+        default_factory=lambda: ["List Number", *(f"List Number {n}" for n in range(2, 10))]
+    )
+    unordered_list: list[str] = field(
+        default_factory=lambda: ["List Bullet", *(f"List Bullet {n}" for n in range(2, 10))]
+    )
     table: str = "Table Grid"
 
 
@@ -146,6 +150,7 @@ class ListParagraphBlock:
     list_id: int
     item_id: int
     start: int
+    parent_list_id: int | None = None
     continuation: bool = False
     quote_depth: int = 0
     task_checked: bool | None = None
