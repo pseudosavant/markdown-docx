@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -171,3 +172,55 @@ def test_task_list_uses_clickable_word_checkboxes(tmp_path: Path) -> None:
     assert paragraphs[2]._p.pPr.numPr.numId.val != 0
     assert paragraphs[3]._p.pPr.numPr.numId.val != 0
     assert any(run.bold for run in paragraphs[0].runs if run.text == "milk")
+
+
+@pytest.mark.parametrize("marker", ["-", "1."])
+def test_default_template_uses_native_nine_level_lists(tmp_path: Path, marker: str) -> None:
+    source = "".join(f"{'   ' * depth}{marker} Level {depth + 1}\n" for depth in range(9))
+    model = parse_document(source, input_path=tmp_path / "input.md", source_name="input.md")
+    output = tmp_path / "nine-levels.docx"
+    render_docx(model, output, template_path=None, base_dir=tmp_path, allow_remote_images=False)
+    document = Document(output)
+    numbering = document.part.numbering_part.element
+    paragraphs = document.paragraphs
+    assert [paragraph._p.pPr.numPr.ilvl.val for paragraph in paragraphs] == list(range(9))
+    assert [paragraph.style.name for paragraph in paragraphs] == [
+        ("List Bullet" if marker == "-" else "List Number") + (f" {depth + 1}" if depth else "") for depth in range(9)
+    ]
+    assert len({paragraph._p.pPr.numPr.numId.val for paragraph in paragraphs}) == 1
+    for paragraph in paragraphs:
+        num = numbering.num_having_numId(paragraph._p.pPr.numPr.numId.val)
+        abstract_id = num.abstractNumId.val
+        abstract = numbering.xpath(f'./w:abstractNum[@w:abstractNumId="{abstract_id}"]')[0]
+        assert len(abstract.findall(qn("w:lvl"))) == 9
+        assert abstract.find(qn("w:multiLevelType")).get(qn("w:val")) == "multilevel"
+
+
+def test_mixed_nested_lists_use_separate_native_sequences(tmp_path: Path) -> None:
+    source = "1. Ordered\n   - Bullet\n      1. Number again\n"
+    model = parse_document(source, input_path=tmp_path / "input.md", source_name="input.md")
+    output = tmp_path / "mixed.docx"
+    render_docx(model, output, template_path=None, base_dir=tmp_path, allow_remote_images=False)
+    paragraphs = Document(output).paragraphs
+    assert len({paragraph._p.pPr.numPr.numId.val for paragraph in paragraphs}) == 3
+
+
+def test_custom_template_keeps_its_existing_list_definitions(
+    tmp_path: Path, blank_template_factory: Callable[[str], Path]
+) -> None:
+    template = blank_template_factory("custom.docx")
+    model = parse_document("1. Parent\n   1. Child\n", input_path=tmp_path / "input.md", source_name="input.md")
+    output = tmp_path / "custom-lists.docx"
+    render_docx(model, output, template_path=template, base_dir=tmp_path, allow_remote_images=False)
+    paragraphs = Document(output).paragraphs
+    assert paragraphs[0]._p.pPr.numPr.numId.val != paragraphs[1]._p.pPr.numPr.numId.val
+
+
+def test_empty_image_placeholder_remains_on_list_item(tmp_path: Path) -> None:
+    model = parse_document("- ![Network diagram]()\n", input_path=tmp_path / "input.md", source_name="input.md")
+    output = tmp_path / "placeholder-list.docx"
+    render_docx(model, output, template_path=None, base_dir=tmp_path, allow_remote_images=False)
+    paragraphs = Document(output).paragraphs
+    assert len(paragraphs) == 1
+    assert paragraphs[0].text == "[Image: Network diagram]"
+    assert paragraphs[0]._p.pPr.numPr.numId.val != 0
